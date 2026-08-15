@@ -19,7 +19,7 @@ SwipeSort is an experimental pre-release research tool. The first milestone is a
 
 Requirements:
 
-- Node.js 20 or newer
+- Node.js 22.22.2 or newer
 - npm 10 or newer
 - a modern browser
 
