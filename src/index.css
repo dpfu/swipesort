@@ -1,0 +1,90 @@
+:root {
+  color: #292821;
+  background: #f3efe7;
+  font-family:
+    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --ink: #292821;
+  --muted: #746f64;
+  --paper: #fbf8f1;
+  --canvas: #f3efe7;
+  --line: rgba(41, 40, 33, 0.14);
+  --line-strong: rgba(41, 40, 33, 0.28);
+  --left: #4d78a8;
+  --left-soft: #dbe7f1;
+  --right: #d96645;
+  --right-soft: #f5ddd4;
+  --focus: #1c6594;
+  --shadow-card: 0 24px 70px rgba(54, 45, 31, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--canvas);
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.72), transparent 30rem),
+    var(--canvas);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+input[type="file"],
+label[for] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 75%, transparent);
+  outline-offset: 3px;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+::selection {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,253 @@
+.appShell {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.appShell--sort {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.appHeader {
+  z-index: 20;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding:
+    calc(12px + env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    12px
+    max(18px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--canvas) 88%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  font-size: 0.92rem;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand--button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.brand__mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--paper);
+  background: var(--ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.appNav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.appNav__button,
+.button,
+.iconButton {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  cursor: pointer;
+}
+
+.appNav__button {
+  padding: 0 14px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.appNav__button[aria-current="page"] {
+  color: var(--paper);
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.appMain {
+  min-width: 0;
+  min-height: 0;
+}
+
+.projectTools {
+  display: flex;
+  max-width: 1040px;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 18px 24px 0;
+}
+
+.projectTools label {
+  display: grid;
+  min-width: min(260px, 42vw);
+  gap: 5px;
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 740;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.projectTools select,
+.projectTools button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(251, 248, 241, 0.76);
+}
+
+.projectTools select {
+  min-width: 0;
+  padding: 0 12px;
+  color: var(--ink);
+  font-weight: 650;
+  text-transform: none;
+}
+
+.projectTools button {
+  padding: 0 13px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.projectTools button:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.resumeSort {
+  display: flex;
+  width: min(calc(100% - 48px), 992px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px auto 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+}
+
+.resumeSort > div {
+  display: grid;
+  gap: 3px;
+}
+
+.resumeSort strong {
+  font-size: 0.88rem;
+}
+
+.resumeSort span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.loadingScreen {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  place-items: center;
+  gap: 14px;
+  color: var(--muted);
+}
+
+.loadingScreen p {
+  margin: 0;
+}
+
+.appStatus {
+  position: fixed;
+  z-index: 100;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 12px 16px;
+  border-radius: 16px;
+  color: white;
+  background: rgba(31, 30, 26, 0.92);
+  box-shadow: 0 14px 40px rgba(20, 18, 12, 0.24);
+  font-size: 0.88rem;
+}
+
+.visuallyHidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (max-width: 560px) {
+  .appHeader {
+    min-height: 58px;
+  }
+
+  .appNav__button {
+    min-width: 44px;
+    padding-inline: 10px;
+    font-size: 0.76rem;
+  }
+
+  .appNav__button span {
+    display: none;
+  }
+
+  .projectTools {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 12px 16px 0;
+  }
+
+  .projectTools label {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .projectTools button {
+    width: 100%;
+  }
+
+  .resumeSort {
+    width: calc(100% - 32px);
+  }
+}
+
+@media (max-width: 360px) {
+  .brand--button > span:last-child {
+    display: none;
+  }
+
+  .brand--button {
+    gap: 0;
+  }
+}

@@ -1,0 +1,274 @@
+.ss-replay {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(0.8rem, 2.5svh, 1.5rem);
+  width: 100%;
+  height: 100svh;
+  min-height: 100svh;
+  box-sizing: border-box;
+  padding: max(1rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) max(0.9rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+  overflow: hidden;
+  color: var(--ss-ink, #17201c);
+  text-align: left;
+}
+
+.ss-replay__header,
+.ss-replay-controls,
+.ss-replay__footer {
+  width: min(100%, 36rem);
+  margin-inline: auto;
+}
+
+.ss-replay__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+}
+
+.ss-replay__header h1 {
+  margin: 0.15rem 0 0;
+  font: 500 clamp(2rem, 8vw, 3.4rem) / 0.95 var(--ss-display, Georgia, serif);
+  letter-spacing: -0.045em;
+}
+
+.ss-replay__header > p {
+  max-width: 13rem;
+  margin: 0;
+  color: var(--ss-muted, #657069);
+  font-size: 0.66rem;
+  text-align: right;
+}
+
+.ss-replay-stage {
+  position: relative;
+  display: grid;
+  width: min(100%, 31rem);
+  min-height: 0;
+  margin-inline: auto;
+  place-items: center;
+}
+
+.ss-replay-destinations {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ss-replay-destinations > div {
+  display: grid;
+  gap: 0.15rem;
+  width: 34%;
+  padding: 0.9rem;
+  opacity: 0.28;
+  background: color-mix(in srgb, var(--category-color) 22%, var(--ss-paper, #f7f5ef));
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.ss-replay-destinations > div:first-child {
+  justify-items: start;
+  border-radius: 0 1rem 1rem 0;
+  transform: translateX(-40%);
+}
+
+.ss-replay-destinations > div:last-child {
+  justify-items: end;
+  border-radius: 1rem 0 0 1rem;
+  text-align: right;
+  transform: translateX(40%);
+}
+
+.ss-replay-destinations > div.is-active {
+  opacity: 1;
+}
+
+.ss-replay-destinations > div:first-child.is-active {
+  transform: translateX(-28%);
+}
+
+.ss-replay-destinations > div:last-child.is-active {
+  transform: translateX(28%);
+}
+
+.ss-replay-destinations span {
+  color: var(--ss-muted, #657069);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ss-replay-destinations strong {
+  max-width: 7rem;
+  overflow: hidden;
+  font: 500 0.95rem / 1 var(--ss-display, Georgia, serif);
+  text-overflow: ellipsis;
+}
+
+.ss-replay-card {
+  z-index: 1;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: calc(100% - 2.6rem);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--ss-line, #d9ddd9);
+  border-radius: 1.35rem;
+  background: var(--ss-card, #ebeae4);
+  box-shadow: 0 1rem 3rem color-mix(in srgb, var(--ss-ink, #17201c) 10%, transparent);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.ss-replay-card--left {
+  box-shadow: -0.35rem 0 0 color-mix(in srgb, var(--category-color) 70%, transparent), 0 1rem 3rem color-mix(in srgb, var(--ss-ink, #17201c) 10%, transparent);
+  transform: translateX(-0.7rem) rotate(-1deg);
+}
+
+.ss-replay-card--right {
+  box-shadow: 0.35rem 0 0 color-mix(in srgb, var(--category-color) 70%, transparent), 0 1rem 3rem color-mix(in srgb, var(--ss-ink, #17201c) 10%, transparent);
+  transform: translateX(0.7rem) rotate(1deg);
+}
+
+.ss-replay-card > footer {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid var(--ss-line, #d9ddd9);
+  background: var(--ss-paper, #f7f5ef);
+}
+
+.ss-replay-card > footer strong,
+.ss-replay-card > footer span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-replay-card > footer strong {
+  font-size: 0.78rem;
+}
+
+.ss-replay-card > footer span {
+  color: var(--ss-muted, #657069);
+  font-size: 0.64rem;
+}
+
+.ss-replay-card > footer em {
+  width: max-content;
+  margin-top: 0.2rem;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--ss-line-strong, #aeb6b0);
+  border-radius: 999px;
+  color: var(--ss-muted, #657069);
+  font: 650 0.58rem / 1 var(--ss-sans, system-ui, sans-serif);
+  font-style: normal;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.ss-replay-controls {
+  display: grid;
+  grid-template-columns: auto minmax(5rem, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.ss-replay-controls > div {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.ss-replay-controls button {
+  min-width: 2.7rem;
+  min-height: 2.7rem;
+  padding: 0.55rem;
+  border: 1px solid var(--ss-line, #d9ddd9);
+  border-radius: 999px;
+  color: var(--ss-ink, #17201c);
+  background: var(--ss-paper, #f7f5ef);
+  cursor: pointer;
+  font: 650 0.7rem / 1 var(--ss-sans, system-ui, sans-serif);
+}
+
+.ss-replay-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.ss-replay-controls .ss-replay-play {
+  min-width: 4.2rem;
+  color: var(--ss-paper, #f7f5ef);
+  border-color: var(--ss-ink, #17201c);
+  background: var(--ss-ink, #17201c);
+}
+
+.ss-replay-controls label,
+.ss-replay-controls input {
+  display: block;
+  width: 100%;
+}
+
+.ss-replay-controls input {
+  accent-color: var(--ss-ink, #17201c);
+}
+
+.ss-replay-controls p {
+  margin: 0;
+  color: var(--ss-muted, #657069);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.ss-replay-controls p strong {
+  color: var(--ss-ink, #17201c);
+}
+
+.ss-replay__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ss-replay--empty {
+  place-items: center;
+}
+
+.ss-replay--empty > div {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  max-width: 28rem;
+}
+
+.ss-replay--empty h1 {
+  max-width: 10ch;
+  margin: 0;
+  font: 500 clamp(3rem, 12vw, 5.5rem) / 0.92 var(--ss-display, Georgia, serif);
+  letter-spacing: -0.055em;
+}
+
+@media (max-width: 31rem) {
+  .ss-replay-controls {
+    grid-template-columns: 1fr auto;
+  }
+
+  .ss-replay-controls label {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 40rem) {
+  .ss-replay-destinations {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-replay-destinations > div,
+  .ss-replay-card {
+    transition: none;
+  }
+}
