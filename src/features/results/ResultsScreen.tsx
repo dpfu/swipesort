@@ -21,7 +21,14 @@ export function ResultsScreen({
   onReplay,
   onNewSort,
 }: ResultsScreenProps) {
-  const [activeCategoryId, setActiveCategoryId] = useState(categories[0].id)
+  const [activeCategoryId, setActiveCategoryId] = useState(
+    () =>
+      categories.find((category) =>
+        items.some(
+          (media) => categoryIdByItemId[media.item.id] === category.id,
+        ),
+      )?.id ?? categories[0].id,
+  )
   const grouped = useMemo(
     () =>
       categories.map((category) => ({
@@ -47,10 +54,13 @@ export function ResultsScreen({
     <main className="ss-results" aria-labelledby="results-title">
       <header className="ss-results__header">
         <div>
-          <p className="ss-eyebrow">Review</p>
-          <h1 id="results-title">The result, still open to correction.</h1>
+          <p className="ss-eyebrow">Result</p>
+          <h1 id="results-title">Review your result.</h1>
         </div>
-        <p>{items.length} {items.length === 1 ? 'card' : 'cards'} sorted into two categories.</p>
+        <p>
+          {items.length} {items.length === 1 ? 'card' : 'cards'} sorted. Move any card to
+          change its category. Replay keeps your original choices.
+        </p>
       </header>
 
       <div className="ss-results-tabs" role="tablist" aria-label="Result categories">
@@ -74,7 +84,7 @@ export function ResultsScreen({
             }}
             style={{ '--category-color': category.color } as CSSProperties}
           >
-            <span>{category.direction}</span>
+            <span>Swipe {category.direction}</span>
             <strong>{category.name}</strong>
             <i>{categoryItems.length}</i>
           </button>
@@ -89,13 +99,13 @@ export function ResultsScreen({
         style={{ '--category-color': activeGroup.category.color } as CSSProperties}
       >
         <header>
-          <p>Current category</p>
+          <p>Cards in</p>
           <h2>{activeGroup.category.name}</h2>
         </header>
 
         {activeGroup.items.length === 0 ? (
           <div className="ss-result-empty">
-            <p>No cards are in this category.</p>
+            <p>No cards in {activeGroup.category.name}.</p>
           </div>
         ) : (
           <ul className="ss-result-grid">
@@ -124,12 +134,12 @@ export function ResultsScreen({
         <footer className="ss-results__footer">
           {onNewSort ? (
             <button className="ss-text-action" type="button" onClick={onNewSort}>
-              New sort
+              Sort again
             </button>
           ) : <span />}
           {onReplay ? (
             <button className="ss-button ss-button--primary" type="button" onClick={onReplay}>
-              Replay session
+              Replay original choices
             </button>
           ) : null}
         </footer>

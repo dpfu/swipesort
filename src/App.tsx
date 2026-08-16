@@ -43,6 +43,14 @@ import './App.css'
 
 const storage = swipeSortStorage
 
+type NoticeAction = {
+  label: string
+  itemId: string
+  categoryId: string
+  projectId: string
+  sessionId: string
+}
+
 function fileTitle(fileName: string): string {
   return fileName.replace(/\.[^.]+$/, '').trim() || 'Untitled media'
 }
@@ -70,6 +78,8 @@ function App() {
   const [isImporting, setIsImporting] = useState(false)
   const [error, setError] = useState<string>()
   const [status, setStatus] = useState<string>()
+  const [statusRevision, setStatusRevision] = useState(0)
+  const [noticeAction, setNoticeAction] = useState<NoticeAction>()
   const [replayStep, setReplayStep] = useState(0)
   const [isReplayPlaying, setIsReplayPlaying] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
@@ -79,10 +89,17 @@ function App() {
   const projectRef = useRef<Project | null>(null)
   projectRef.current = project
 
-  const reportError = useCallback((cause: unknown) => {
-    const message = cause instanceof Error ? cause.message : 'Something went wrong.'
+  const reportError = useCallback((_cause: unknown, message = 'Something went wrong. Try again.') => {
     setError(message)
     setStatus(undefined)
+    setNoticeAction(undefined)
+  }, [])
+
+  const showStatus = useCallback((message: string, action?: NoticeAction) => {
+    setStatus(message)
+    setStatusRevision((revision) => revision + 1)
+    setNoticeAction(action)
+    setError(undefined)
   }, [])
 
   const loadProject = useCallback(
@@ -93,6 +110,8 @@ function App() {
       setSession(null)
       setScreen('setup')
       setError(undefined)
+      setStatus(undefined)
+      setNoticeAction(undefined)
       setReplayStep(0)
       setIsReplayPlaying(false)
       const sessions = await storage.listSessions(nextProject.id)
@@ -122,7 +141,12 @@ function App() {
         setProjects(existingProjects.length > 0 ? existingProjects : [initial])
         await loadProject(initial)
       } catch (cause) {
-        if (active) reportError(cause)
+        if (active) {
+          reportError(
+            cause,
+            'Couldn\'t open your saved projects. Reload SwipeSort and try again.',
+          )
+        }
       } finally {
         if (active) setIsHydrated(true)
       }
@@ -215,7 +239,10 @@ function App() {
       if (active) {
         setMissingMediaItemIds(new Set(mediaItems.map((item) => item.id)))
         setHydratedMediaKey(mediaKey)
-        reportError(cause)
+        reportError(
+          cause,
+          'Some local media couldn\'t be opened. Return to Setup and add it again.',
+        )
       }
     })
     return () => {
@@ -224,10 +251,13 @@ function App() {
   }, [mediaItems, mediaKey, reportError])
 
   useEffect(() => {
-    if (!status) return
-    const timeout = window.setTimeout(() => setStatus(undefined), 3200)
+    if (!status || noticeAction) return
+    const timeout = window.setTimeout(() => {
+      setStatus(undefined)
+      setNoticeAction(undefined)
+    }, 4200)
     return () => window.clearTimeout(timeout)
-  }, [status])
+  }, [noticeAction, status, statusRevision])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -244,7 +274,9 @@ function App() {
         next,
         ...current.filter((candidate) => candidate.id !== next.id),
       ])
-      void storage.putProject(next).catch(reportError)
+      void storage.putProject(next).catch((cause) => {
+        reportError(cause, 'Couldn\'t save that project change. Try again.')
+      })
     },
     [reportError],
   )
@@ -281,14 +313,14 @@ function App() {
           ...current.filter((candidate) => candidate.id !== next.id),
         ])
         await storage.putProject(next)
-        setStatus(`${files.length} ${files.length === 1 ? 'item' : 'items'} added.`)
+        showStatus(`${files.length} ${files.length === 1 ? 'card' : 'cards'} added.`)
       } catch (cause) {
-        reportError(cause)
+        reportError(cause, 'Couldn\'t add that media. Choose another image or short video.')
       } finally {
         setIsImporting(false)
       }
     },
-    [project, reportError],
+    [project, reportError, showStatus],
   )
 
   const handleLoadDemo = useCallback(async () => {
@@ -308,13 +340,13 @@ function App() {
         ...current.filter((candidate) => candidate.id !== next.id),
       ])
       await storage.putProject(next)
-      setStatus('Demo set ready to sort.')
+      showStatus('Demo cards are ready to sort.')
     } catch (cause) {
-      reportError(cause)
+      reportError(cause, 'Couldn\'t add the demo cards. Try again.')
     } finally {
       setIsImporting(false)
     }
-  }, [project, reportError])
+  }, [project, reportError, showStatus])
 
   const startSort = useCallback(async () => {
     if (!project || project.items.length === 0) return
@@ -341,8 +373,10 @@ function App() {
       setScreen('sort')
       setReplayStep(0)
       setError(undefined)
+      setStatus(undefined)
+      setNoticeAction(undefined)
     } catch (cause) {
-      reportError(cause)
+      reportError(cause, 'Couldn\'t start this sort. Try again.')
     }
   }, [project, reportError])
 
@@ -358,11 +392,9 @@ function App() {
         })
         await storage.putSession(next)
         setSession(next)
-        if (!getNextCardId(next)) {
-          window.setTimeout(() => setScreen('results'), 240)
-        }
+        setError(undefined)
       } catch (cause) {
-        reportError(cause)
+        reportError(cause, 'Couldn\'t save your choice. The card was not moved. Try again.')
         throw cause
       }
     },
@@ -379,14 +411,18 @@ function App() {
     try {
       await storage.putSession(next)
       setSession(next)
+      setError(undefined)
     } catch (cause) {
-      reportError(cause)
+      reportError(cause, 'Couldn\'t undo that choice. Try again.')
     }
   }, [reportError, session])
 
   const handleCorrection = useCallback(
-    async (itemId: string, categoryId: string) => {
+    async (itemId: string, categoryId: string, isUndo = false) => {
       if (!session) return
+      const previousCategoryId = deriveResultAssignments(session).find(
+        (assignment) => assignment.itemId === itemId,
+      )?.categoryId
       try {
         const next = applyReviewCorrection(session, {
           id: nanoid(),
@@ -396,11 +432,27 @@ function App() {
         })
         await storage.putSession(next)
         setSession(next)
+        const title = session.itemSnapshot.find((item) => item.id === itemId)?.title ?? 'Card'
+        const categoryName = session.categorySnapshot.find(
+          (category) => category.id === categoryId,
+        )?.name
+        showStatus(
+          `${title} moved to ${categoryName ?? 'the other category'}.`,
+          !isUndo && previousCategoryId && previousCategoryId !== categoryId
+            ? {
+                label: 'Undo',
+                itemId,
+                categoryId: previousCategoryId,
+                projectId: session.projectId,
+                sessionId: session.id,
+              }
+            : undefined,
+        )
       } catch (cause) {
-        reportError(cause)
+        reportError(cause, 'Couldn\'t move that card. Try again.')
       }
     },
-    [reportError, session],
+    [reportError, session, showStatus],
   )
 
   const presentedById = useMemo(
@@ -482,11 +534,11 @@ function App() {
       const archive = await exportProjectArchive(storage, project.id)
       const safeName = project.name.trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')
       downloadBlob(archive, `${safeName || 'swipesort-project'}.swipesort.zip`)
-      setStatus('Project exported.')
+      showStatus('Project downloaded.')
     } catch (cause) {
-      reportError(cause)
+      reportError(cause, 'Couldn\'t download this project. Try again.')
     }
-  }, [project, reportError])
+  }, [project, reportError, showStatus])
 
   const handleImport = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
@@ -499,14 +551,17 @@ function App() {
         const nextProjects = await storage.listProjects()
         setProjects(nextProjects)
         await loadProject(imported, true)
-        setStatus('Project imported.')
+        showStatus('Project imported.')
       } catch (cause) {
-        reportError(cause)
+        reportError(
+          cause,
+          'Couldn\'t import that project. Choose a SwipeSort project ZIP and try again.',
+        )
       } finally {
         setIsImporting(false)
       }
     },
-    [loadProject, reportError],
+    [loadProject, reportError, showStatus],
   )
 
   const handleNewProject = useCallback(async () => {
@@ -516,42 +571,50 @@ function App() {
       setProjects((current) => [next, ...current])
       await loadProject(next, false)
     } catch (cause) {
-      reportError(cause)
+      reportError(cause, 'Couldn\'t create a new project. Try again.')
     }
   }, [loadProject, reportError])
 
   if (!isHydrated || !project) {
     return (
-      <main className="loadingScreen" aria-live="polite">
+      <main className="loadingScreen" aria-live="polite" role={error ? 'alert' : undefined}>
         <span className="brand__mark" aria-hidden="true">↔</span>
-        <p>Opening SwipeSort…</p>
+        <p>{error ?? 'Opening SwipeSort…'}</p>
+        {error ? (
+          <button className="ss-button ss-button--primary" type="button" onClick={() => window.location.reload()}>
+            Reload
+          </button>
+        ) : null}
       </main>
     )
   }
 
   const isSortScreen = screen === 'sort'
+  const isReplayScreen = screen === 'replay'
   const canShowResult = Boolean(session?.completedAt)
   const hasInProgressSession = Boolean(session && !session.completedAt)
 
   return (
-    <div className={`appShell${isSortScreen ? ' appShell--sort' : ''}`}>
+    <div
+      className={`appShell${isSortScreen ? ' appShell--sort' : ''}${isReplayScreen ? ' appShell--replay' : ''}`}
+    >
       {!isSortScreen ? (
         <header className="appHeader">
-          <button
-            className="brand brand--button"
-            type="button"
-            onClick={() => setScreen('setup')}
-            aria-label="SwipeSort setup"
-          >
+          <div className="brand" aria-label="SwipeSort">
             <span className="brand__mark" aria-hidden="true">↔</span>
             <span>SwipeSort</span>
-          </button>
-          <nav className="appNav" aria-label="Project views">
+          </div>
+          <nav className="appNav" aria-label="Project screens">
             <button
               className="appNav__button"
               type="button"
               aria-current={screen === 'setup' ? 'page' : undefined}
-              onClick={() => setScreen('setup')}
+              onClick={() => {
+                setIsReplayPlaying(false)
+                setStatus(undefined)
+                setNoticeAction(undefined)
+                setScreen('setup')
+              }}
             >
               Setup
             </button>
@@ -561,9 +624,14 @@ function App() {
                   className="appNav__button"
                   type="button"
                   aria-current={screen === 'results' ? 'page' : undefined}
-                  onClick={() => setScreen('results')}
+                  onClick={() => {
+                    setIsReplayPlaying(false)
+                    setStatus(undefined)
+                    setNoticeAction(undefined)
+                    setScreen('results')
+                  }}
                 >
-                  Results
+                  Result
                 </button>
                 <button
                   className="appNav__button"
@@ -571,6 +639,8 @@ function App() {
                   aria-current={screen === 'replay' ? 'page' : undefined}
                   onClick={() => {
                     setReplayStep(0)
+                    setStatus(undefined)
+                    setNoticeAction(undefined)
                     setScreen('replay')
                   }}
                 >
@@ -595,7 +665,11 @@ function App() {
                     const selected = projects.find(
                       (candidate) => candidate.id === event.target.value,
                     )
-                    if (selected) void loadProject(selected, true).catch(reportError)
+                    if (selected) {
+                      void loadProject(selected, true).catch((cause) => {
+                        reportError(cause, 'Couldn\'t open that project. Try again.')
+                      })
+                    }
                   }}
                 >
                   {projects.map((candidate) => (
@@ -605,7 +679,7 @@ function App() {
                   ))}
                 </select>
               </label>
-              <button type="button" disabled={isImporting} onClick={() => void handleNewProject()}>New</button>
+              <button type="button" disabled={isImporting} onClick={() => void handleNewProject()}>New project</button>
               <button type="button" disabled={isImporting} onClick={() => importInputRef.current?.click()}>Import</button>
               <button type="button" disabled={isImporting} onClick={() => void handleExport()}>Export</button>
               <input
@@ -628,7 +702,11 @@ function App() {
                   className="ss-button ss-button--primary"
                   type="button"
                   disabled={isImporting}
-                  onClick={() => setScreen('sort')}
+                  onClick={() => {
+                    setStatus(undefined)
+                    setNoticeAction(undefined)
+                    setScreen('sort')
+                  }}
                 >
                   Resume sorting
                 </button>
@@ -658,11 +736,19 @@ function App() {
                   moveProjectItem(current, itemId, direction),
                 )
               }
-              onStart={() => void startSort()}
-              startLabel={hasInProgressSession ? 'Start new session' : undefined}
+              onStart={() => {
+                if (
+                  hasInProgressSession &&
+                  !window.confirm(
+                    'Start this sort over? Your current progress will no longer be available from this project.',
+                  )
+                ) return
+                void startSort()
+              }}
+              startLabel={hasInProgressSession ? 'Start over…' : undefined}
               onLoadDemo={() => void handleLoadDemo()}
               isImporting={isImporting}
-              error={error}
+              error={undefined}
             />
           </>
         ) : null}
@@ -695,6 +781,8 @@ function App() {
             }}
             onReplay={() => {
               setReplayStep(0)
+              setStatus(undefined)
+              setNoticeAction(undefined)
               setScreen('replay')
             }}
             onNewSort={() => void startSort()}
@@ -717,13 +805,57 @@ function App() {
             }}
             onExit={() => {
               setIsReplayPlaying(false)
+              setStatus(undefined)
+              setNoticeAction(undefined)
               setScreen('results')
             }}
           />
         ) : null}
       </div>
 
-      {status ? <div className="appStatus" role="status">{status}</div> : null}
+      {error ? (
+        <div className="appNotice appNotice--error" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={() => setError(undefined)}>Dismiss</button>
+        </div>
+      ) : null}
+      {status ? (
+        <div className="appNotice" role="status">
+          <p>{status}</p>
+          {noticeAction ? (
+            <div className="appNotice__actions">
+              <button
+                type="button"
+                onClick={() => {
+                  const action = noticeAction
+                  setStatus(undefined)
+                  setNoticeAction(undefined)
+                  if (
+                    action.projectId !== project.id ||
+                    action.sessionId !== session?.id
+                  ) {
+                    return
+                  }
+                  void handleCorrection(action.itemId, action.categoryId, true)
+                }}
+              >
+                {noticeAction.label}
+              </button>
+              <button
+                className="appNotice__dismiss"
+                type="button"
+                aria-label="Dismiss notification"
+                onClick={() => {
+                  setStatus(undefined)
+                  setNoticeAction(undefined)
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }

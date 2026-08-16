@@ -3,7 +3,7 @@
   min-height: 100svh;
   box-sizing: border-box;
   margin-inline: auto;
-  padding: clamp(1.25rem, 5vw, 3.5rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+  padding: clamp(1.25rem, 4vw, 3rem) clamp(1rem, 4vw, 2.5rem) max(5rem, env(safe-area-inset-bottom));
   color: var(--ss-ink, #17201c);
   text-align: left;
 }
@@ -11,13 +11,13 @@
 .ss-results__header {
   display: grid;
   gap: 1rem;
-  margin-bottom: clamp(2.2rem, 6vw, 4rem);
+  margin-bottom: clamp(1.8rem, 5vw, 3.5rem);
 }
 
 .ss-results__header h1 {
   max-width: 13ch;
   margin: 0;
-  font: 500 clamp(2.7rem, 9vw, 5.8rem) / 0.94 var(--ss-display, Georgia, serif);
+  font: 500 clamp(2.35rem, 8vw, 5.25rem) / 0.96 var(--ss-display, Georgia, serif);
   letter-spacing: -0.055em;
   text-wrap: balance;
 }
@@ -26,13 +26,15 @@
   max-width: 28rem;
   margin: 0;
   color: var(--ss-muted, #657069);
+  line-height: 1.5;
+  text-wrap: pretty;
 }
 
 .ss-results-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.55rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .ss-results-tabs button {
@@ -40,6 +42,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.22rem 0.7rem;
   min-width: 0;
+  min-height: 60px;
   padding: 0.85rem 0.95rem;
   border: 1px solid var(--ss-line, #d9ddd9);
   border-radius: 0.9rem;
@@ -57,17 +60,17 @@
 
 .ss-results-tabs span {
   color: var(--ss-muted, #657069);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .ss-results-tabs strong {
-  overflow: hidden;
+  min-width: 0;
   font: 500 clamp(1rem, 4vw, 1.3rem) / 1.15 var(--ss-display, Georgia, serif);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .ss-results-tabs i {
@@ -96,7 +99,7 @@
 .ss-result-panel > header p {
   margin: 0;
   color: var(--ss-muted, #657069);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -128,28 +131,30 @@
 }
 
 .ss-result-card strong {
-  overflow: hidden;
-  font-size: 0.76rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .ss-result-card button {
-  width: max-content;
+  display: inline-flex;
+  width: 100%;
   max-width: 100%;
-  padding: 0.25rem 0;
+  min-height: 44px;
+  align-items: center;
+  padding: 0.55rem 0;
   overflow: hidden;
   border: 0;
   color: var(--ss-muted, #657069);
   background: transparent;
   cursor: pointer;
-  font: 600 0.66rem / 1.2 var(--ss-sans, system-ui, sans-serif);
+  font: 600 0.75rem / 1.3 var(--ss-sans, system-ui, sans-serif);
   text-align: left;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .ss-result-empty {
@@ -173,6 +178,63 @@
   margin-top: 3rem;
   padding-top: 1rem;
   border-top: 1px solid var(--ss-line, #d9ddd9);
+}
+
+@media (max-width: 31rem) {
+  .ss-results {
+    padding-top: 1rem;
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+
+  .ss-results__header {
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .ss-results__header h1 {
+    max-width: 15ch;
+    font-size: clamp(2.1rem, 10vw, 2.75rem);
+    line-height: 0.98;
+  }
+
+  .ss-results-tabs {
+    margin-bottom: 1.25rem;
+  }
+
+  .ss-results-tabs button {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .ss-result-panel {
+    gap: 0.75rem;
+  }
+
+  .ss-results__footer {
+    position: fixed;
+    z-index: 30;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    gap: 0.75rem;
+    margin: 0;
+    padding:
+      0.65rem
+      max(1rem, env(safe-area-inset-right))
+      max(0.65rem, env(safe-area-inset-bottom))
+      max(1rem, env(safe-area-inset-left));
+    border-top-color: color-mix(in srgb, var(--ss-line, #d9ddd9) 80%, transparent);
+    background: color-mix(in srgb, var(--canvas, #f3efe7) 92%, transparent);
+    box-shadow: 0 -0.75rem 2rem color-mix(in srgb, var(--ss-ink, #17201c) 7%, transparent);
+    backdrop-filter: blur(18px);
+  }
+}
+
+@media (hover: hover) {
+  .ss-results-tabs button:hover:not([aria-selected='true']),
+  .ss-result-card button:hover {
+    border-color: var(--ss-line-strong, #aeb6b0);
+    color: var(--ss-ink, #17201c);
+  }
 }
 
 @media (min-width: 42rem) {

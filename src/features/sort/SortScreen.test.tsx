@@ -37,7 +37,7 @@ describe('SortScreen', () => {
       />,
     )
 
-    expect(screen.getByRole('heading', { name: 'Loading media…' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Loading this card…' })).toBeInTheDocument()
     expect(
       screen.queryByRole('heading', { name: 'Every card has a place.' }),
     ).not.toBeInTheDocument()
@@ -59,6 +59,11 @@ describe('SortScreen', () => {
       />,
     )
 
+    expect(document.querySelector('.ss-sort__count')).toHaveTextContent('1 of 3 sorted')
+    expect(screen.getByRole('progressbar', { name: 'Cards sorted' })).toHaveAttribute(
+      'aria-valuetext',
+      '1 of 3 cards sorted',
+    )
     await user.click(screen.getByRole('button', { name: 'Sort into Quiet' }))
     await waitFor(() => expect(onAssign).toHaveBeenCalledOnce())
     expect(onAssign).toHaveBeenCalledWith(expect.objectContaining({ direction: 'left', input: 'button' }))
@@ -88,5 +93,27 @@ describe('SortScreen', () => {
 
     fireEvent.keyDown(window, { key: 'z' })
     expect(onUndo).toHaveBeenCalledOnce()
+  })
+
+  it('offers one clear action when every card is sorted', async () => {
+    const user = userEvent.setup()
+    const onExit = vi.fn()
+    render(
+      <SortScreen
+        categories={testCategories}
+        index={2}
+        total={2}
+        canUndo
+        onAssign={vi.fn()}
+        onUndo={vi.fn()}
+        onExit={onExit}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Every card has a place.' })).toBeVisible()
+    const reviewResult = screen.getByRole('button', { name: 'Review result' })
+    await waitFor(() => expect(reviewResult).toHaveFocus())
+    await user.click(reviewResult)
+    expect(onExit).toHaveBeenCalledOnce()
   })
 })
