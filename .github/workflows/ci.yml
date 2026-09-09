@@ -35,7 +35,11 @@ jobs:
         run: npm test
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: |
+          # Playwright downloads Chromium itself; the runner's Chrome apt feed is unused.
+          # Its inconsistent package index must not block Ubuntu system dependencies.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
+          npx playwright install --with-deps chromium
 
       - name: Browser tests
         run: npm run test:e2e
