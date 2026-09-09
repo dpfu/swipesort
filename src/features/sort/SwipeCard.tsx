@@ -4,6 +4,8 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  type PointerEvent,
+  type CSSProperties,
 } from 'react'
 import {
   motion,
@@ -21,6 +23,7 @@ import type { PresentedMedia, SwipeCommit } from '../types'
 
 export type SwipeCardHandle = {
   swipe: (direction: SwipeDirection, input?: Exclude<InputMethod, 'pointer'>) => void
+  startDrag: (event: PointerEvent) => void
 }
 
 export type SwipeCardProps = {
@@ -122,6 +125,9 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
   useImperativeHandle(
     forwardedRef,
     () => ({
+      startDrag(event) {
+        if (!disabled && !lockedRef.current) dragControls.start(event)
+      },
       swipe(direction, input = 'button') {
         void commit(direction, input)
       },
@@ -179,7 +185,7 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
   }
 
   return (
-    <div className="ss-swipe-stage">
+    <div className="ss-swipe-stage" style={{ '--card-ratio': Math.max(media.asset.width, 1) / Math.max(media.asset.height, 1) } as CSSProperties}>
       <motion.aside
         className="ss-destination ss-destination--left"
         style={leftDestinationStyle}
@@ -217,16 +223,12 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
         whileDrag={reducedMotion ? undefined : { scale: 1.012, cursor: 'grabbing' }}
       >
         <MediaView media={media} variant="active" />
-        <footer
-          className={`ss-swipe-card__caption${isTikTok ? ' ss-swipe-card__caption--handle' : ''}`}
-          data-testid={isTikTok ? 'tiktok-swipe-handle' : undefined}
-          onPointerDown={isTikTok ? (event) => {
-            if (!disabled && !isLeaving) dragControls.start(event)
-          } : undefined}
-        >
-          <p>{media.item.title}</p>
-          <span>{isTikTok ? '← Swipe here →' : media.asset.kind === 'video' ? 'Video' : 'Image'}</span>
-        </footer>
+        {media.asset.kind === 'image' ? (
+          <footer className="ss-swipe-card__caption">
+            <p>{media.item.title}</p>
+            <span>Image</span>
+          </footer>
+        ) : null}
       </motion.article>
     </div>
   )

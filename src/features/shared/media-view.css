@@ -107,3 +107,5 @@
   color: #101010;
   background: #fff;
 }
+
+.ss-tiktok-player__notice button { min-height: 44px; min-width: 44px; }

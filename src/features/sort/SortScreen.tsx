@@ -165,11 +165,18 @@ export function SortScreen({
 
   const completed = Math.min(displayedIndex, total)
   const progress = total > 0 ? (completed / total) * 100 : 0
+  const videoFirst = displayedCurrent.asset.kind !== 'image'
+  const isTikTok = displayedCurrent.asset.kind === 'tiktok'
 
   return (
-    <main className="ss-sort" aria-labelledby="sort-title">
+    <main className={`ss-sort${videoFirst ? ' ss-sort--video' : ''}`} aria-labelledby="sort-title">
       <header className="ss-sort__header">
-        <div>
+        {videoFirst && onExit ? (
+          <button type="button" className="ss-video-tool" onClick={exit} disabled={isCommitting} aria-label="Back to setup" title="Back to setup">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
+          </button>
+        ) : null}
+        <div className={videoFirst ? 'ss-visually-hidden' : undefined}>
           <p className="ss-eyebrow">Sort</p>
           <h1 id="sort-title" className="ss-visually-hidden">
             Choose a category for each card
@@ -178,6 +185,14 @@ export function SortScreen({
         <p className="ss-sort__count" aria-live="polite">
           <span>{completed}</span> of {total} sorted
         </p>
+        {videoFirst ? (
+          <button type="button" className="ss-video-tool" onClick={undo} disabled={!canUndo || isCommitting} aria-label="Undo last" title="Undo last">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12h-2" /></svg>
+          </button>
+        ) : null}
+        {displayedCurrent.asset.kind === 'tiktok' ? (
+          <a className="ss-video-tool ss-video-tool--source" href={displayedCurrent.asset.tiktok.url} target="_blank" rel="noopener noreferrer" aria-label="Open original on TikTok" title="Open original on TikTok">↗</a>
+        ) : null}
       </header>
 
       <div
@@ -203,7 +218,7 @@ export function SortScreen({
         disabled={isCommitting}
       />
 
-      <div className="ss-sort__controls" aria-label="Sorting choices">
+      <div className={`ss-sort__controls${isTikTok ? ' ss-sort__controls--swipe' : ''}`} aria-label="Sorting choices">
         <button
           className="ss-choice-button ss-choice-button--left"
           type="button"
@@ -215,6 +230,16 @@ export function SortScreen({
           <span aria-hidden="true">←</span>
           <strong>{leftCategory.name}</strong>
         </button>
+        {isTikTok ? (
+          <div
+            className="ss-swipe-grip"
+            data-testid="tiktok-swipe-handle"
+            aria-label="Swipe left or right here, or use the category buttons"
+            onPointerDown={(event) => cardRef.current?.startDrag(event)}
+          >
+            <span aria-hidden="true">↔<small>Swipe</small></span>
+          </div>
+        ) : null}
         <button
           className="ss-choice-button ss-choice-button--right"
           type="button"
@@ -228,7 +253,7 @@ export function SortScreen({
         </button>
       </div>
 
-      <footer className="ss-sort__footer">
+      {!videoFirst ? <footer className="ss-sort__footer">
         <button type="button" className="ss-text-action" onClick={undo} disabled={!canUndo || isCommitting}>
           Undo last
         </button>
@@ -238,7 +263,7 @@ export function SortScreen({
             Back to setup
           </button>
         ) : <span />}
-      </footer>
+      </footer> : null}
     </main>
   )
 }

@@ -287,13 +287,115 @@
   }
 }
 
-.ss-swipe-card__caption--handle {
+/* A fitted video between two compact HUD rows; nothing covers TikTok's controls. */
+.ss-sort--video {
+  position: relative;
+  grid-template-rows: 44px minmax(0, 1fr) auto;
+  gap: 6px;
+  height: 100dvh;
+  min-height: 0;
+  padding: env(safe-area-inset-top) max(6px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+  color: #f8f8f8;
+  background: #101112;
+}
+
+.ss-sort--video .ss-sort__header {
+  z-index: 2;
+  gap: 8px;
+  width: min(100%, 32rem);
+}
+
+.ss-sort--video .ss-sort__count {
+  flex: 1;
+  color: #b8bdc0;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.ss-sort--video .ss-sort__count > span:first-child { color: #fff; }
+
+.ss-video-tool {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #eee;
+  background: transparent;
+  font-size: 1.7rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ss-video-tool:disabled { opacity: 0.3; }
+.ss-video-tool--source { font-size: 1.2rem; }
+.ss-video-tool:hover:not(:disabled) { background: #ffffff14; }
+
+.ss-sort--video .ss-sort__progress {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 44px);
+  left: 0;
+  right: 0;
+  z-index: 2;
+  width: min(100%, 32rem);
+  height: 1px;
+  background: #ffffff20;
+}
+.ss-sort--video .ss-sort__progress span { background: #e6eee8; }
+
+.ss-sort--video .ss-swipe-stage {
+  container-type: size;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.ss-sort--video .ss-swipe-card {
+  width: min(100cqw, calc(100cqh * var(--card-ratio)));
+  height: min(100cqh, calc(100cqw / var(--card-ratio)));
+  grid-template-rows: minmax(0, 1fr);
+  border: 0;
+  border-radius: 8px;
+  background: #000;
+  box-shadow: none;
+}
+
+.ss-sort--video .ss-card-stack { display: none; }
+.ss-sort--video .ss-sort__controls {
+  z-index: 2;
+  width: min(100%, 30rem);
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid #ffffff24;
+  border-radius: 30px;
+  background: #ffffff0c;
+}
+
+.ss-sort__controls--swipe { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
+.ss-sort--video .ss-choice-button {
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  border: 0;
+  color: #fff;
+  background: color-mix(in srgb, var(--category-color) 27%, #17191c);
+}
+.ss-sort--video .ss-choice-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--category-color) 45%, #17191c);
+}
+.ss-sort--video .ss-choice-button strong { font-size: 0.8rem; }
+.ss-swipe-grip {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  color: #b8bdc0;
   touch-action: none;
   user-select: none;
   cursor: grab;
-  align-items: center;
-  flex-direction: column;
-  gap: 0.3rem;
+  font-size: 1.35rem;
 }
-.ss-swipe-card__caption--handle p { max-width: 100%; }
-.ss-swipe-card__caption--handle span { color: var(--ss-ink); }
+
+.ss-swipe-grip > span { text-align: center; line-height: 1; }
+.ss-swipe-grip small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.04em; }

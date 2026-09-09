@@ -4,12 +4,13 @@ import { tikTokPlayerUrl } from '../../media/tiktok'
 
 const ORIGIN = 'https://www.tiktok.com'
 
-export function TikTokPlayer({ link, title, thumbnail, preview, playbackActive }: {
+export function TikTokPlayer({ link, title, thumbnail, preview, playbackActive, autoplay = false }: {
   link: TikTokLink
   title: string
   thumbnail: boolean
   preview: boolean
   playbackActive?: boolean
+  autoplay?: boolean
 }) {
   const [opened, setOpened] = useState(!preview)
   const [attempt, setAttempt] = useState(0)
@@ -22,6 +23,7 @@ export function TikTokPlayer({ link, title, thumbnail, preview, playbackActive }
   useEffect(() => {
     if (thumbnail || !opened) return
     let ready = false
+    let triedMutedPlayback = false
     const timer = window.setTimeout(() => {
       if (!ready) setUnconfirmed(true)
     }, 15000)
@@ -37,7 +39,16 @@ export function TikTokPlayer({ link, title, thumbnail, preview, playbackActive }
           frame.current.contentWindow?.postMessage({ 'x-tiktok-player': true, type: playback.current ? 'play' : 'pause' }, ORIGIN)
         }
       }
-      if (event.data.type === 'onPlayerError' && event.data.value?.errorCode !== 3002) {
+      if (event.data.type === 'onPlayerError' && event.data.value?.errorCode === 3002) {
+        // Safari may reject sound autoplay. Retry muted once, keeping native volume controls.
+        if (autoplay && !triedMutedPlayback) {
+          triedMutedPlayback = true
+          frame.current.contentWindow?.postMessage({ 'x-tiktok-player': true, type: 'mute' }, ORIGIN)
+          frame.current.contentWindow?.postMessage({ 'x-tiktok-player': true, type: 'play' }, ORIGIN)
+        }
+        return
+      }
+      if (event.data.type === 'onPlayerError') {
         window.clearTimeout(timer)
         setError('TikTok could not play this video. It may be unavailable or blocked here.')
       }
@@ -47,7 +58,7 @@ export function TikTokPlayer({ link, title, thumbnail, preview, playbackActive }
       window.clearTimeout(timer)
       window.removeEventListener('message', onMessage)
     }
-  }, [attempt, opened, thumbnail, link.videoId])
+  }, [attempt, opened, thumbnail, link.videoId, autoplay])
 
   useEffect(() => {
     if (playbackActive === undefined) return
@@ -69,7 +80,7 @@ export function TikTokPlayer({ link, title, thumbnail, preview, playbackActive }
         <iframe
           key={`${link.videoId}-${attempt}`}
           ref={frame}
-          src={tikTokPlayerUrl(link.videoId)}
+          src={tikTokPlayerUrl(link.videoId, autoplay)}
           title={`TikTok player: ${title}`}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           allowFullScreen
@@ -82,14 +93,14 @@ export function TikTokPlayer({ link, title, thumbnail, preview, playbackActive }
           <button type="button" className="ss-button ss-button--primary" onClick={retry}>{error ? 'Retry video' : 'Load TikTok player'}</button>
         </div>
       )}
-      <div className="ss-tiktok-player__links">
+      {(!autoplay || (unconfirmed && !error)) ? <div className="ss-tiktok-player__links">
         {unconfirmed && !error ? (
           <span className="ss-tiktok-player__notice">
             No video? <button type="button" onClick={retry}>Retry player</button>
           </span>
         ) : null}
-        <a href={link.url} target="_blank" rel="noopener noreferrer">Open original on TikTok ↗</a>
-      </div>
+        {!autoplay ? <a href={link.url} target="_blank" rel="noopener noreferrer">Open original on TikTok ↗</a> : null}
+      </div> : null}
     </div>
   )
 }

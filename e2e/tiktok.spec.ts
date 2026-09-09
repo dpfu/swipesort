@@ -114,3 +114,39 @@ test('unavailable TikTok remains sortable and provides retry and source link', a
   await page.getByRole('button', { name: 'Sort into Category A' }).click()
   await expect(page.getByRole('heading', { name: 'Every card has a place.' })).toBeVisible()
 })
+
+
+for (const viewport of [{ width: 320, height: 568 }, { width: 393, height: 650 }, { width: 844, height: 390 }]) {
+  test(`video fits without crop or overlapping controls at ${viewport.width}×${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    await mockPlayers(page)
+    await page.goto('/')
+    await addLinks(page, first)
+    await page.getByRole('button', { name: 'Start sorting' }).click()
+    const frame = page.locator('iframe')
+    await expect(frame).toHaveAttribute('src', /autoplay=1/)
+    await expect(page.getByRole('button', { name: 'Sort into Category A' })).toHaveCount(1)
+    await expect(page.locator('.ss-swipe-card__caption')).toHaveCount(0)
+    const rect = await frame.boundingBox()
+    const dock = await page.locator('.ss-sort__controls').boundingBox()
+    const header = await page.locator('.ss-sort__header').boundingBox()
+    expect(rect).not.toBeNull()
+    expect(dock).not.toBeNull()
+    expect(header).not.toBeNull()
+    if (!rect || !dock || !header) return
+    expect(rect.width / rect.height).toBeCloseTo(9 / 16, 2)
+    expect(rect.height).toBeGreaterThan(viewport.height - 140)
+    expect(rect.y).toBeGreaterThanOrEqual(header.y + header.height)
+    expect(rect.y + rect.height).toBeLessThanOrEqual(dock.y)
+    expect(dock.y + dock.height).toBeLessThanOrEqual(viewport.height)
+    for (const button of await page.locator('main button').all()) {
+      const box = await button.boundingBox()
+      expect(box?.width).toBeGreaterThanOrEqual(44)
+      expect(box?.height).toBeGreaterThanOrEqual(44)
+    }
+    // HUD cannot intercept native player actions or accidentally sort a card.
+    await page.frameLocator('iframe').getByRole('button', { name: 'Play video' }).click()
+    await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0')
+    expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
+  })
+}

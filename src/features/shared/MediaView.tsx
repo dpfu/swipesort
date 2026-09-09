@@ -29,7 +29,8 @@ export function MediaView({
           title={item.title}
           thumbnail={variant === 'thumbnail'}
           preview={variant === 'result'}
-          playbackActive={variant === 'replay' ? playbackActive : undefined}
+          autoplay={isActive}
+          playbackActive={isActive ? true : variant === 'replay' ? playbackActive : undefined}
         />
       ) : asset.kind === 'image' ? (
         <img
