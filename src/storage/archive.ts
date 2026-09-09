@@ -84,7 +84,7 @@ export async function exportProjectArchive(
 
   const manifest: ArchiveManifest = validateArchiveManifest({
     format: 'swipesort-project',
-    version: 1,
+    version: assets.some((asset) => asset.kind === 'tiktok') ? 2 : 1,
     exportedAt: new Date().toISOString(),
     project,
     assets: assets.map((asset) => ({
@@ -144,6 +144,9 @@ export async function readProjectArchive(
       throw new ArchiveValidationError(
         `${entry.path}: expected ${entry.metadata.size} bytes, found ${bytes.byteLength}`,
       )
+    }
+    if (entry.metadata.kind === 'tiktok' && new TextDecoder().decode(bytes) !== entry.metadata.tiktok.url) {
+      throw new ArchiveValidationError(`${entry.path}: TikTok link does not match its metadata`)
     }
     assets.push({
       ...entry.metadata,

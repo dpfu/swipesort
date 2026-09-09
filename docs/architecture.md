@@ -21,4 +21,14 @@ Review corrections are stored separately. Replay derives a read-only view from t
 
 IndexedDB stores project metadata, media metadata, blobs, and sessions. Runtime object URLs are never persisted. Writes happen at meaningful boundaries such as media import, a committed decision, undo, correction, and navigation.
 
-ZIP imports are validated before any write. The pre-release schema supports only its current version and does not migrate legacy data.
+ZIP imports are validated before any write. Project and session schemas remain version 1; supported archive versions are described below. Unsupported schemas are rejected rather than migrated.
+
+## Linked TikTok media
+
+TikTok is an explicit third media kind with a validated canonical URL and string video ID. Its stored Blob is a small `text/uri-list` asset containing that URL, so existing asset ownership, session snapshots, and atomic project bundles remain applicable. Media hydration never creates an object URL for it. No fetching occurs during URL import or ZIP import/export.
+
+Only the official `https://www.tiktok.com/player/v1/{id}` iframe is constructed. Incoming player messages require both the exact TikTok origin and the current iframe window. Player controls do not write sorting state. The parent uses a separate drag handle because cross-origin iframe pointer events do not bubble into SwipeSort. Player errors offer retry and a source link without blocking categorization. A missing ready message only adds a retry hint: the live player can show its cover and cookie controls before Play triggers this event, so a timeout must never remove its iframe.
+
+Archive version 2 is used when any referenced asset (including old session snapshots) is a TikTok link; local-only exports remain version 1. Both versions are validated before any IndexedDB write, including URL/ID consistency and URI payload equality. Existing projects and local media need no database migration. URLs/decisions are preserved, but no promise is made to preserve remote video availability or its playback timeline.
+
+Player contract: https://developers.tiktok.com/docs/en/embed-player

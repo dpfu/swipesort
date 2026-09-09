@@ -2,7 +2,7 @@
 
 ## Promise
 
-Load local images and short videos, name two categories, sort every item with a smooth left/right gesture, then review and replay the session.
+Load local images, short videos, or a batch of full TikTok video URLs, name two categories, sort every item with a smooth left/right gesture, then review and replay the session.
 
 ## Experience principles
 
@@ -33,6 +33,10 @@ Reconstruct the immutable original session from its event log. Replay is strictl
 
 ## V0.1 boundaries
 
-Included: two categories, image/video import, swipe/buttons/keyboard, undo, local persistence, results corrections, replay, project ZIP import/export, and a mobile-first responsive layout.
+Included: two categories, image/video import, swipe/buttons/keyboard, undo, local persistence, results corrections, replay, project ZIP import/export, TikTok player cards, and a mobile-first responsive layout.
 
-Excluded: text cards, skip/neutral, more categories, backend services, accounts, URL ingest, collaboration, video editing or transcoding, analytics, and AI classification.
+Excluded: text cards, skip/neutral, more categories, backend services, accounts, generic URL ingest/short-link resolution, collaboration, video editing or transcoding, analytics, and AI classification.
+
+## TikTok cards
+
+Batch input accepts one canonical video URL per line and keeps input order, skipping duplicate IDs. Invalid lines must be fixed before the batch is saved. Watching is online through TikTok's own iframe. Keep it interactive: gestures inside the player control the player; a clearly marked handle below it swipes the card. Buttons remain available for every card, including unavailable videos. Setup uses local labels, Results loads a player on demand, and replay remains an immutable history of sorting decisions rather than a recording of video playback.

@@ -2,6 +2,7 @@ import { useId, useRef, type ChangeEvent } from 'react'
 import type { Category } from '../../domain/types'
 import { MediaView } from '../shared/MediaView'
 import type { PresentedMedia } from '../types'
+import { TikTokImport } from './TikTokImport'
 import './setup-screen.css'
 
 export type SetupScreenProps = {
@@ -14,6 +15,7 @@ export type SetupScreenProps = {
   onRemoveItem: (itemId: string) => void
   onMoveItem: (itemId: string, direction: 'up' | 'down') => void
   onStart: () => void
+  onTikTokImport?: (text: string) => Promise<void>
   onLoadDemo?: () => void
   startLabel?: string
   isImporting?: boolean
@@ -33,6 +35,7 @@ export function SetupScreen({
   onMoveItem,
   onStart,
   onLoadDemo,
+  onTikTokImport,
   startLabel = 'Start sorting',
   isImporting = false,
   error,
@@ -57,7 +60,7 @@ export function SetupScreen({
       <header className="ss-screen-heading">
         <p className="ss-eyebrow">Setup</p>
         <h1 id="setup-title">Set up your sort.</h1>
-        <p>Name two categories, then add images or short videos.</p>
+        <p>Name two categories, then add images, short videos, or TikTok links.</p>
       </header>
 
       <form
@@ -129,6 +132,8 @@ export function SetupScreen({
             aria-hidden="true"
           />
 
+          {onTikTokImport ? <TikTokImport onImport={onTikTokImport} disabled={isImporting} /> : null}
+
           {items.length === 0 ? (
             <div className="ss-empty-media">
               <p>Add images or short videos from this device.</p>
@@ -175,7 +180,8 @@ export function SetupScreen({
                     <div className="ss-setup-list__copy">
                       <span>{String(index + 1).padStart(2, '0')}</span>
                       <strong title={media.item.title}>{media.item.title}</strong>
-                      <small>{media.asset.kind === 'image' ? 'Image' : 'Video'}</small>
+                      {media.asset.kind === 'tiktok' ? <a className="ss-setup-tiktok-link" href={media.asset.tiktok.url} target="_blank" rel="noopener noreferrer">Open video ↗</a> : null}
+                      <small>{media.asset.kind === 'tiktok' ? 'TikTok · online' : media.asset.kind === 'image' ? 'Image' : 'Video'}</small>
                     </div>
                     <div className="ss-setup-list__actions" aria-label={`Actions for ${media.item.title}`}>
                       <button
@@ -215,7 +221,7 @@ export function SetupScreen({
         <footer className="ss-setup__footer">
           <p>
             {ready
-              ? 'Changes save automatically in this browser. Your media stays on this device.'
+              ? 'Changes save in this browser. Local files stay here; TikTok videos stream online.'
               : 'Add a project name, two category names, and at least one card.'}
           </p>
           <button className="ss-button ss-button--primary" type="submit" disabled={!ready}>

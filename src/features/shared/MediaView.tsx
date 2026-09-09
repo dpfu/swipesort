@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { PresentedMedia } from '../types'
+import { TikTokPlayer } from './TikTokPlayer'
 import './media-view.css'
 
 type MediaViewProps = {
@@ -21,7 +22,16 @@ export function MediaView({
 
   return (
     <div className={`ss-media ss-media--${variant}`} style={style}>
-      {asset.kind === 'image' ? (
+      {asset.kind === 'tiktok' ? (
+        <TikTokPlayer
+          key={item.id}
+          link={asset.tiktok}
+          title={item.title}
+          thumbnail={variant === 'thumbnail'}
+          preview={variant === 'result'}
+          playbackActive={variant === 'replay' ? playbackActive : undefined}
+        />
+      ) : asset.kind === 'image' ? (
         <img
           src={src}
           alt={item.title}

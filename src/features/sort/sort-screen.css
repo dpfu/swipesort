@@ -286,3 +286,14 @@
     transition: none;
   }
 }
+
+.ss-swipe-card__caption--handle {
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.ss-swipe-card__caption--handle p { max-width: 100%; }
+.ss-swipe-card__caption--handle span { color: var(--ss-ink); }

@@ -6,7 +6,7 @@ export const testCategories: [Category, Category] = [
   { id: 'vivid', name: 'Vivid', direction: 'right', color: '#86a896' },
 ]
 
-export function testMedia(id: string, title: string): PresentedMedia {
+export function testMedia(id: string, title: string): PresentedMedia & { asset: MediaAsset & { kind: 'image' } } {
   const createdAt = '2026-08-15T10:00:00.000Z'
   const item: MediaItem = {
     id,
@@ -14,7 +14,7 @@ export function testMedia(id: string, title: string): PresentedMedia {
     title,
     createdAt,
   }
-  const asset: MediaAsset = {
+  const asset: MediaAsset & { kind: 'image' } = {
     id: item.assetId,
     kind: 'image',
     fileName: `${id}.svg`,

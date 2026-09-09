@@ -1,6 +1,6 @@
 # SwipeSort
 
-SwipeSort is a mobile-first, local-only tool for sorting images and short videos into two named categories with a horizontal swipe.
+SwipeSort is a mobile-first tool for sorting local images, short videos, and linked TikTok videos into two named categories with a horizontal swipe.
 
 The app has four focused steps:
 
@@ -9,11 +9,19 @@ The app has four focused steps:
 3. Review both groups and correct individual assignments.
 4. Replay the original sorting session without changing its recorded history.
 
-SwipeSort runs entirely in the browser. Projects, media, and recordings stay in IndexedDB unless the user explicitly exports them.
+SwipeSort runs entirely in the browser. Projects, local media, TikTok links, and sorting recordings stay in IndexedDB unless exported. Linked TikTok videos stream directly through the official TikTok player; they need an internet connection and are not downloaded or included as video files in exports.
 
 ## Status
 
 SwipeSort is an experimental pre-release research tool. The first milestone is a small, polished v0.1 rather than a general media platform.
+
+## TikTok videos
+
+In Setup, open **Add TikTok links** and paste one full `https://www.tiktok.com/@creator/video/…` URL per line. Duplicate video IDs are skipped; invalid lines are reported before any cards are added. Short `vm.tiktok.com`, `vt.tiktok.com`, and `/t/` links must first be opened in a browser to obtain the full video URL. No API key, proxy, or TikTok login is required by SwipeSort.
+
+The official player loads during sorting and replay; in Results, choose **Load TikTok player**. Setup previews do not contact TikTok. Use the player to watch, then swipe the **Swipe here** handle below it or choose a category button. Gestures inside the cross-origin player belong to TikTok and cannot move the card. Unavailable/blocked videos offer retry and an original link; they can still be categorized or removed in Setup.
+
+Exports preserve URLs and original sorting decisions, not an offline copy of TikTok content or its playback timeline. TikTok's availability, regional restrictions, browser settings, and player behavior still apply. A ZIP containing TikTok assets uses archive version 2; this build continues to read and write local-media-only version 1 archives. Older builds cannot open version 2.
 
 ## Local development
 
@@ -39,7 +47,7 @@ npm run test:e2e
 ## Product limits
 
 - exactly two categories
-- images and short videos only
+- local images and short videos, plus full TikTok video URLs
 - no backend, accounts, sync, collaboration, statistics, or transcoding
 - browser codec and storage limits apply
 - pre-release persistence and export formats may change without migration support

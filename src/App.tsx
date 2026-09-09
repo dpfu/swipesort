@@ -39,6 +39,7 @@ import {
   touchProject,
   withCategoryName,
 } from './app/project'
+import { parseTikTokUrls, prepareTikTokLink } from './media/tiktok'
 import './App.css'
 
 const storage = swipeSortStorage
@@ -201,7 +202,7 @@ function App() {
           {
             item,
             asset,
-            src: urlRegistryRef.current.get(asset.id, asset.blob),
+            src: asset.kind === 'tiktok' ? '' : urlRegistryRef.current.get(asset.id, asset.blob),
             posterSrc: poster
               ? urlRegistryRef.current.get(poster.id, poster.blob)
               : undefined,
@@ -322,6 +323,34 @@ function App() {
     },
     [project, reportError, showStatus],
   )
+
+  const handleTikTokImport = useCallback(async (text: string) => {
+    const current = projectRef.current
+    if (!current || isImporting) throw new Error('Wait for the current import to finish.')
+    const parsed = parseTikTokUrls(text)
+    setIsImporting(true)
+    try {
+      const existing = await storage.getAssets(current.items.map((item) => item.assetId))
+      const ids = new Set(existing.flatMap((asset) => asset.kind === 'tiktok' ? [asset.tiktok.videoId] : []))
+      const links = parsed.links.filter((link) => !ids.has(link.videoId))
+      const duplicates = parsed.duplicates + parsed.links.length - links.length
+      if (!links.length) {
+        showStatus('These TikTok videos are already in this project.')
+        return
+      }
+      const assets = links.map(prepareTikTokLink)
+      const latest = projectRef.current
+      if (!latest || latest.id !== current.id) throw new Error('The project changed. Add the links again.')
+      const next = touchProject({ ...latest, items: [...latest.items, ...assets.map((asset) => ({
+        id: nanoid(), assetId: asset.id, title: `TikTok ${new URL(asset.tiktok.url).pathname.split('/')[1]} · ${asset.tiktok.videoId.slice(-4)}`, createdAt: asset.createdAt,
+      }))] })
+      await storage.putProjectWithAssets(next, assets)
+      projectRef.current = next
+      setProject(next)
+      setProjects((all) => [next, ...all.filter((entry) => entry.id !== next.id)])
+      showStatus(`${links.length} TikTok ${links.length === 1 ? 'video' : 'videos'} added.${duplicates ? ` ${duplicates} duplicate ${duplicates === 1 ? 'link' : 'links'} skipped.` : ''}`)
+    } finally { setIsImporting(false) }
+  }, [isImporting, showStatus])
 
   const handleLoadDemo = useCallback(async () => {
     if (!project) return
@@ -713,7 +742,9 @@ function App() {
               </aside>
             ) : null}
             <SetupScreen
+              key={project.id}
               projectName={project.name}
+              onTikTokImport={handleTikTokImport}
               categories={project.categories}
               items={setupMedia}
               onProjectNameChange={(name) =>

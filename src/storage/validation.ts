@@ -1,3 +1,4 @@
+import { parseTikTokUrl } from '../media/tiktok'
 import type {
   Category,
   MediaAsset,
@@ -16,7 +17,7 @@ export type ArchiveAsset = {
 
 export type ArchiveManifest = {
   format: 'swipesort-project'
-  version: 1
+  version: 1 | 2
   exportedAt: string
   project: Project
   assets: ArchiveAsset[]
@@ -169,6 +170,25 @@ function project(value: unknown, path: string): Project {
 
 function mediaAsset(value: unknown, path: string): MediaAsset {
   const source = record(value, path)
+  if (source.kind === 'tiktok') {
+    const link = record(source.tiktok, `${path}.tiktok`)
+    let parsed
+    try { parsed = parseTikTokUrl(string(link.url, `${path}.tiktok.url`)) }
+    catch { fail(`${path}.tiktok`, 'expected a full TikTok video URL') }
+    if (parsed.url !== link.url || parsed.videoId !== link.videoId) {
+      fail(`${path}.tiktok`, 'URL and video ID must be canonical and match')
+    }
+    if (source.mimeType !== 'text/uri-list' || source.posterAssetId !== undefined || source.durationMs !== undefined) {
+      fail(path, 'invalid TikTok link metadata')
+    }
+    const size = new TextEncoder().encode(parsed.url).length
+    if (source.size !== size || source.width !== 9 || source.height !== 16) {
+      fail(path, 'invalid TikTok link size or aspect ratio')
+    }
+    return { id: id(source.id, `${path}.id`), kind: 'tiktok', tiktok: parsed,
+      fileName: string(source.fileName, `${path}.fileName`), mimeType: 'text/uri-list',
+      size, width: 9, height: 16, createdAt: date(source.createdAt, `${path}.createdAt`) }
+  }
   if (source.kind !== 'image' && source.kind !== 'video') {
     fail(`${path}.kind`, 'expected image or video')
   }
@@ -316,12 +336,12 @@ export function validateArchiveManifest(value: unknown): ArchiveManifest {
   if (source.format !== 'swipesort-project') {
     fail('manifest.format', 'expected swipesort-project')
   }
-  if (source.version !== 1) {
-    fail('manifest.version', 'expected version 1')
+  if (source.version !== 1 && source.version !== 2) {
+    fail('manifest.version', 'expected version 1 or 2')
   }
   const result: ArchiveManifest = {
     format: 'swipesort-project',
-    version: 1,
+    version: source.version,
     exportedAt: date(source.exportedAt, 'manifest.exportedAt'),
     project: project(source.project, 'manifest.project'),
     assets: array(source.assets, 'manifest.assets').map((entry, index) =>
@@ -330,6 +350,9 @@ export function validateArchiveManifest(value: unknown): ArchiveManifest {
     sessions: array(source.sessions, 'manifest.sessions').map((entry, index) =>
       session(entry, `manifest.sessions[${index}]`),
     ),
+  }
+  if (result.version === 1 && result.assets.some((entry) => entry.metadata.kind === 'tiktok')) {
+    fail('manifest.version', 'TikTok links require version 2')
   }
   validateReferences(result)
   return result

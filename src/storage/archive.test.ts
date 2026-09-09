@@ -153,3 +153,39 @@ describe('project archives', () => {
     expect(await target.listProjects()).toEqual([])
   })
 })
+
+it('round-trips mixed TikTok/local media and original session snapshots without fetching videos', async () => {
+  const { parseTikTokUrl, prepareTikTokLink } = await import('../media/tiktok')
+  const source = storage()
+  const target = storage()
+  const data = fixture()
+  const link = prepareTikTokLink(parseTikTokUrl('https://www.tiktok.com/@scout2015/video/6718335390845095173'))
+  const linkedItem = { id: 'linked-card', assetId: link.id, title: 'TikTok', createdAt: now }
+  data.project.items.push(linkedItem)
+  data.session.itemSnapshot.push(linkedItem)
+  data.session.cardOrder.push(linkedItem.id)
+  await source.putProjectWithAssets(data.project, [data.asset, link])
+  await source.putSession(data.session)
+  // Even removal from Setup must retain the link needed by the old recording.
+  data.project.items = [data.project.items[0]]
+  await source.putProject(data.project)
+  const archive = await exportProjectArchive(source, data.project.id)
+  const zip = await JSZip.loadAsync(await archive.arrayBuffer())
+  const manifest = JSON.parse(await zip.file('manifest.json')!.async('string'))
+  expect(manifest.version).toBe(2)
+  await importProjectArchive(target, archive)
+  expect(await target.getSession(data.session.id)).toEqual(data.session)
+  expect(await (await target.getAsset(link.id))!.blob.text()).toBe(link.tiktok.url)
+  expect(await target.getProject(data.project.id)).toEqual(data.project)
+
+  const entry = manifest.assets.find((candidate: { metadata: { id: string } }) => candidate.metadata.id === link.id)
+  entry.metadata.tiktok.url = 'https://evil.org/@scout2015/video/6718335390845095173'
+  zip.file('manifest.json', JSON.stringify(manifest))
+  await expect(importProjectArchive(target, await zip.generateAsync({ type: 'uint8array' }))).rejects.toThrow('TikTok')
+  expect(await target.getSession(data.session.id)).toEqual(data.session)
+
+  entry.metadata.tiktok.url = link.tiktok.url
+  zip.file('manifest.json', JSON.stringify(manifest))
+  zip.file(entry.path, link.tiktok.url.replace('6718335390845095173', '6718335390845095174'))
+  await expect(importProjectArchive(target, await zip.generateAsync({ type: 'uint8array' }))).rejects.toThrow('does not match')
+})

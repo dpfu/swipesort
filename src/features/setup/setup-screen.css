@@ -408,3 +408,28 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+.ss-tiktok-import summary {
+  cursor: pointer;
+  padding-block: 0.75rem;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.ss-tiktok-import textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem;
+  border: 1px solid var(--ss-line-strong, #aeb6b0);
+  border-radius: 0.6rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.ss-tiktok-import > .ss-field-hint { margin-block: 0.75rem; }
+.ss-tiktok-import__error { color: var(--ss-danger); white-space: pre-line; }
+.ss-setup-tiktok-link { grid-column: 2; color: inherit; font-size: 0.75rem; }

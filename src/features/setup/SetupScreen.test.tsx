@@ -51,7 +51,7 @@ describe('SetupScreen', () => {
     expect(screen.getByRole('list', { name: 'Card order' })).toBeVisible()
     expect(
       screen.getByText(
-        'Changes save automatically in this browser. Your media stays on this device.',
+        'Changes save in this browser. Local files stay here; TikTok videos stream online.',
       ),
     ).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Move Second frame earlier' }))

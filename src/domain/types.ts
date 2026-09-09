@@ -4,7 +4,7 @@ export type SwipeDirection = 'left' | 'right'
 
 export type InputMethod = 'pointer' | 'button' | 'keyboard'
 
-export type MediaKind = 'image' | 'video'
+export type MediaKind = 'image' | 'video' | 'tiktok'
 
 export type Category = {
   id: string
@@ -15,7 +15,6 @@ export type Category = {
 
 export type MediaAsset = {
   id: string
-  kind: MediaKind
   fileName: string
   mimeType: string
   size: number
@@ -24,7 +23,10 @@ export type MediaAsset = {
   durationMs?: number
   posterAssetId?: string
   createdAt: string
-}
+} & (
+  | { kind: 'image' | 'video'; tiktok?: never }
+  | { kind: 'tiktok'; tiktok: { videoId: string; url: string } }
+)
 
 export type MediaItem = {
   id: string
