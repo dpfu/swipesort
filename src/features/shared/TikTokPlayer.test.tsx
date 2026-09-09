@@ -50,3 +50,33 @@ it('pauses replay media and sends controls only to the TikTok origin', () => {
   rerender(<TikTokPlayer {...props} playbackActive={false} />)
   expect(send).toHaveBeenLastCalledWith({ 'x-tiktok-player': true, type: 'pause' }, 'https://www.tiktok.com')
 })
+
+
+it('requests autoplay without permanently locking volume and retries a blocked start muted only once', () => {
+  render(<TikTokPlayer {...props} autoplay playbackActive />)
+  const frame = screen.getByTitle('TikTok player: Example') as HTMLIFrameElement
+  const url = new URL(frame.src)
+  expect(url.searchParams.get('autoplay')).toBe('1')
+  expect(url.searchParams.get('loop')).toBe('1')
+  expect(url.searchParams.get('muted')).not.toBe('1')
+  const send = vi.spyOn(frame.contentWindow!, 'postMessage')
+  const blocked = () => act(() => window.dispatchEvent(new MessageEvent('message', {
+    origin: 'https://www.tiktok.com', source: frame.contentWindow,
+    data: { 'x-tiktok-player': true, type: 'onPlayerError', value: { errorCode: 3002 } },
+  })))
+  blocked()
+  expect(send.mock.calls).toEqual([
+    [{ 'x-tiktok-player': true, type: 'mute' }, 'https://www.tiktok.com'],
+    [{ 'x-tiktok-player': true, type: 'play' }, 'https://www.tiktok.com'],
+  ])
+  blocked()
+  expect(send).toHaveBeenCalledTimes(2)
+  expect(screen.getByTitle('TikTok player: Example')).toBe(frame)
+  expect(screen.queryByRole('status')).toBeNull()
+})
+
+it('keeps result players opt-in without autoplay', () => {
+  render(<TikTokPlayer {...props} preview />)
+  fireEvent.click(screen.getByRole('button', { name: 'Load TikTok player' }))
+  expect(new URL((screen.getByTitle('TikTok player: Example') as HTMLIFrameElement).src).searchParams.get('autoplay')).toBe('0')
+})

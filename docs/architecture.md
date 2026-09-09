@@ -32,3 +32,5 @@ Only the official `https://www.tiktok.com/player/v1/{id}` iframe is constructed.
 Archive version 2 is used when any referenced asset (including old session snapshots) is a TikTok link; local-only exports remain version 1. Both versions are validated before any IndexedDB write, including URL/ID consistency and URI payload equality. Existing projects and local media need no database migration. URLs/decisions are preserved, but no promise is made to preserve remote video availability or its playback timeline.
 
 Player contract: https://developers.tiktok.com/docs/en/embed-player
+
+Video sorting uses the dynamic viewport height and a size-container to fit each card at its media aspect ratio. The toolbar and category dock have separate layout rows, so they never intercept cross-origin player controls. TikTok's dock grip starts the existing drag controls through the card ref; assignment recording is unchanged. Active TikToks request autoplay/loop, with one mute/play retry on error 3002. Do not set `muted=1` in the iframe URL: TikTok documents it as locking the user's volume control. Results remain opt-in and replay remains independently controlled.

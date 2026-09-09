@@ -56,7 +56,7 @@ export function prepareTikTokLink(link: TikTokLink): StoredAsset & { kind: 'tikt
   }
 }
 
-export function tikTokPlayerUrl(videoId: string): string {
+export function tikTokPlayerUrl(videoId: string, autoplay = false): string {
   if (!/^\d{15,25}$/.test(videoId)) throw new Error('Invalid TikTok video ID.')
-  return `https://www.tiktok.com/player/v1/${videoId}?autoplay=0&controls=1&description=0&music_info=0&rel=0`
+  return `https://www.tiktok.com/player/v1/${videoId}?autoplay=${autoplay ? 1 : 0}&loop=${autoplay ? 1 : 0}&controls=1&play_button=${autoplay ? 0 : 1}&timestamp=${autoplay ? 0 : 1}&description=0&music_info=0&rel=0`
 }
