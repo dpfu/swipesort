@@ -35,6 +35,7 @@ export function SortScreen({
   onExit,
 }: SortScreenProps) {
   const cardRef = useRef<SwipeCardHandle>(null)
+  const completionButtonRef = useRef<HTMLButtonElement>(null)
   const isCommittingRef = useRef(false)
   const latestPresentationRef = useRef({ current, index })
   latestPresentationRef.current = { current, index }
@@ -96,6 +97,11 @@ export function SortScreen({
 
   const displayedCurrent = isCommitting ? presentation.current : current
   const displayedIndex = isCommitting ? presentation.index : index
+  const isComplete = !displayedCurrent && !isLoadingCurrent && !isCurrentMissing
+
+  useEffect(() => {
+    if (isComplete) completionButtonRef.current?.focus()
+  }, [isComplete])
 
   if (!displayedCurrent) {
     if (isLoadingCurrent || isCurrentMissing) {
@@ -107,17 +113,17 @@ export function SortScreen({
         >
           <div className="ss-sort-complete">
             <p className="ss-eyebrow">
-              {isLoadingCurrent ? 'Preparing card' : 'Media unavailable'}
+              {isLoadingCurrent ? 'Loading card' : 'Card unavailable'}
             </p>
             <h1 id="sort-media-status-title">
               {isLoadingCurrent
-                ? 'Loading media…'
-                : 'This card could not be loaded.'}
+                ? 'Loading this card…'
+                : 'This card is unavailable.'}
             </h1>
             <p>
               {isLoadingCurrent
-                ? 'SwipeSort is restoring the local file for this card.'
-                : 'The recording is intact, but its local media file is missing.'}
+                ? 'Loading its media from this device.'
+                : 'The sort is saved, but its local media file is missing.'}
             </p>
             {isCurrentMissing && onExit ? (
               <button
@@ -133,14 +139,23 @@ export function SortScreen({
       )
     }
     return (
-      <main className="ss-sort ss-sort--complete" aria-labelledby="sort-complete-title">
+      <main
+        className="ss-sort ss-sort--complete"
+        aria-labelledby="sort-complete-title"
+        aria-live="polite"
+      >
         <div className="ss-sort-complete">
           <p className="ss-eyebrow">Sort complete</p>
           <h1 id="sort-complete-title">Every card has a place.</h1>
-          <p>{total} {total === 1 ? 'card' : 'cards'} sorted. Review the result whenever you are ready.</p>
+          <p>{total} {total === 1 ? 'card' : 'cards'} sorted. Review the result.</p>
           {onExit ? (
-            <button className="ss-button ss-button--primary" type="button" onClick={onExit}>
-              Review results
+            <button
+              ref={completionButtonRef}
+              className="ss-button ss-button--primary"
+              type="button"
+              onClick={onExit}
+            >
+              Review result
             </button>
           ) : null}
         </div>
@@ -155,24 +170,24 @@ export function SortScreen({
     <main className="ss-sort" aria-labelledby="sort-title">
       <header className="ss-sort__header">
         <div>
-          <p className="ss-eyebrow">Sorting</p>
-          <h1 id="sort-title" className="ss-visually-hidden">Sort your media</h1>
+          <p className="ss-eyebrow">Sort</p>
+          <h1 id="sort-title" className="ss-visually-hidden">
+            Choose a category for each card
+          </h1>
         </div>
         <p className="ss-sort__count" aria-live="polite">
-          <span>{String(Math.min(displayedIndex + 1, total)).padStart(2, '0')}</span>
-          <span aria-hidden="true"> / </span>
-          <span className="ss-visually-hidden">of </span>
-          {String(total).padStart(2, '0')}
+          <span>{completed}</span> of {total} sorted
         </p>
       </header>
 
       <div
         className="ss-sort__progress"
         role="progressbar"
-        aria-label="Sorting progress"
+        aria-label="Cards sorted"
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={completed}
+        aria-valuetext={`${completed} of ${total} ${total === 1 ? 'card' : 'cards'} sorted`}
       >
         <span style={{ width: `${progress}%` }} />
       </div>
@@ -217,10 +232,10 @@ export function SortScreen({
         <button type="button" className="ss-text-action" onClick={undo} disabled={!canUndo || isCommitting}>
           Undo last
         </button>
-        <p>Swipe, use the buttons, or press ← →</p>
+        <p>Swipe, choose a category, or press ← →</p>
         {onExit ? (
           <button type="button" className="ss-text-action" onClick={exit} disabled={isCommitting}>
-            Leave sort
+            Back to setup
           </button>
         ) : <span />}
       </footer>

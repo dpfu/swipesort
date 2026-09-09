@@ -25,11 +25,16 @@ describe('ReplayScreen', () => {
       />,
     )
 
-    expect(screen.getByText('Quiet · 0.9s')).toBeInTheDocument()
-    expect(screen.getByText('Later undone')).toBeInTheDocument()
+    expect(screen.getByText('Chose Quiet · 0.9s after start')).toBeInTheDocument()
+    expect(screen.getByText('Undone later')).toBeInTheDocument()
+    expect(
+      screen.getByText('Original choices only. Result corrections aren’t included.'),
+    ).toBeVisible()
+    expect(screen.getByLabelText('Replay controls')).toHaveTextContent('Choice 1 of 2')
+    expect(screen.queryByText(/session/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Move/ })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Next replay step' }))
+    await user.click(screen.getByRole('button', { name: 'Next choice' }))
     expect(onStepChange).toHaveBeenCalledWith(2)
     await user.click(screen.getByRole('button', { name: 'Play replay' }))
     expect(onTogglePlaying).toHaveBeenCalledOnce()

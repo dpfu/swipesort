@@ -22,7 +22,7 @@ export function createEmptyProject(now = new Date()): Project {
   return {
     version: 1,
     id: nanoid(),
-    name: 'Untitled sort',
+    name: 'Untitled project',
     categories: DEFAULT_CATEGORIES.map((category) => ({ ...category })) as [
       Category,
       Category,

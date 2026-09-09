@@ -21,7 +21,7 @@ async function startDemo(
 ) {
   await page.goto('/')
   await expect(
-    page.getByRole('heading', { name: 'Make two choices feel clear.' }),
+    page.getByRole('heading', { name: 'Set up your sort.' }),
   ).toBeVisible()
 
   await page.getByLabel('Project name').fill('Field notes')
@@ -29,7 +29,7 @@ async function startDemo(
   await page.getByLabel('Swipe right').fill(categories[1])
   await page.getByRole('button', { name: 'Try demo set' }).click()
 
-  await expect(page.getByText('6 cards in this sort')).toBeVisible()
+  await expect(page.getByText('6 cards ready to sort')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Start sorting' })).toBeEnabled()
   await page.getByRole('button', { name: 'Start sorting' }).click()
   await expectActiveCard(page, DEMO_TITLES[0], 1)
@@ -45,14 +45,24 @@ async function expectActiveCard(
     'aria-label',
     `Sort ${title}`,
   )
-  await expect(page.getByRole('progressbar', { name: 'Sorting progress' })).toHaveAttribute(
+  await expect(page.getByRole('progressbar', { name: 'Cards sorted' })).toHaveAttribute(
     'aria-valuenow',
     String(ordinal - 1),
   )
-  await expect(page.getByRole('progressbar', { name: 'Sorting progress' })).toHaveAttribute(
+  await expect(page.getByRole('progressbar', { name: 'Cards sorted' })).toHaveAttribute(
     'aria-valuemax',
     String(total),
   )
+}
+
+async function reviewCompletedSort(page: Page) {
+  await expect(
+    page.getByRole('heading', { name: 'Every card has a place.' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Review result' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Review your result.' }),
+  ).toBeVisible()
 }
 
 async function dragActiveCard(page: Page, deltaX: number) {
@@ -150,9 +160,7 @@ test('mobile golden path: gesture feedback, undo, correction, and read-only repl
   await expectActiveCard(page, DEMO_TITLES[5], 6)
   await page.getByRole('button', { name: 'Sort into Keep' }).click()
 
-  await expect(
-    page.getByRole('heading', { name: 'The result, still open to correction.' }),
-  ).toBeVisible()
+  await reviewCompletedSort(page)
   const archiveTab = page.getByRole('tab').filter({ hasText: 'Archive' })
   const keepTab = page.getByRole('tab').filter({ hasText: 'Keep' })
   await expect(archiveTab).toContainText('3')
@@ -182,9 +190,11 @@ test('mobile golden path: gesture feedback, undo, correction, and read-only repl
     )
     .toBe(true)
 
-  await page.getByRole('button', { name: 'Replay session' }).click()
+  await page.getByRole('button', { name: 'Replay original choices' }).click()
   await expect(page.getByRole('heading', { name: 'Replay' })).toBeVisible()
-  await expect(page.getByText('Read-only · corrections are not shown here')).toBeVisible()
+  await expect(
+    page.getByText('Original choices only. Result corrections aren’t included.'),
+  ).toBeVisible()
   await expect
     .poll(() =>
       page.evaluate(
@@ -199,9 +209,9 @@ test('mobile golden path: gesture feedback, undo, correction, and read-only repl
   const replayCard = page.locator('.ss-replay-card')
   await expect(replayPosition).toHaveValue('0')
   await expect(replayCard).toContainText('Blue hour')
-  await expect(replayCard).toContainText('Ready to begin')
+  await expect(replayCard).toContainText('Ready to replay')
 
-  await page.getByRole('button', { name: 'Next replay step' }).click()
+  await page.getByRole('button', { name: 'Next choice' }).click()
   await expect(replayPosition).toHaveValue('1')
   await expect(replayCard).toContainText('Blue hour')
   await expect(replayCard).toContainText('Archive')
@@ -218,10 +228,10 @@ test('mobile golden path: gesture feedback, undo, correction, and read-only repl
   await replayPosition.fill(lastReplayStep)
   await expect(replayCard).toContainText('Warm current')
   await expect(replayCard).toContainText('Keep')
-  await page.getByRole('button', { name: 'Previous replay step' }).click()
+  await page.getByRole('button', { name: 'Previous choice' }).click()
   await expect(replayCard).toContainText('After rain')
 
-  await page.getByRole('button', { name: 'Back to results' }).click()
+  await page.getByRole('button', { name: 'Back to result' }).click()
   await expect(archiveTab).toContainText('2')
   await expect(keepTab).toContainText('4')
   await expect.poll(() => storedSessions(page)).toEqual(sessionBeforeReplay)
@@ -269,9 +279,9 @@ test('an in-progress sort resumes on the exact card after reload', async ({ page
   ).toBe(false)
   await expect(page.getByRole('button', { name: 'Undo last' })).toBeEnabled()
 
-  await page.getByRole('button', { name: 'Leave sort' }).click()
+  await page.getByRole('button', { name: 'Back to setup' }).click()
   await expect(
-    page.getByRole('heading', { name: 'Make two choices feel clear.' }),
+    page.getByRole('heading', { name: 'Set up your sort.' }),
   ).toBeVisible()
   await expect(page.getByText('2 of 6 cards placed')).toBeVisible()
   await page.getByRole('button', { name: 'Resume sorting' }).click()
@@ -296,15 +306,13 @@ test('a local image can be added and sorted without the demo set', async ({ page
       buffer: ONE_PIXEL_PNG,
     })
 
-  await expect(page.getByText('1 card in this sort')).toBeVisible()
+  await expect(page.getByText('1 card ready to sort')).toBeVisible()
   await expect(page.getByText('portrait-sample', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Start sorting' }).click()
   await expectActiveCard(page, 'portrait-sample', 1, 1)
   await page.getByRole('button', { name: 'Sort into Use' }).click()
 
-  await expect(
-    page.getByRole('heading', { name: 'The result, still open to correction.' }),
-  ).toBeVisible()
+  await reviewCompletedSort(page)
   await expect(page.getByRole('tab').filter({ hasText: 'Use' })).toContainText('1')
 })
 
@@ -317,22 +325,20 @@ test('a portrait video remains playable in results and replay', async ({ page })
     .locator('input[type="file"][accept="image/*,video/*"]')
     .setInputFiles(path.join(process.cwd(), 'e2e/fixtures/portrait-sample.webm'))
 
-  await expect(page.getByText('1 card in this sort')).toBeVisible()
+  await expect(page.getByText('1 card ready to sort')).toBeVisible()
   await expect(page.getByText('portrait-sample', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Start sorting' }).click()
   await expectActiveCard(page, 'portrait-sample', 1, 1)
   await expect(page.locator('.ss-swipe-card video')).toBeVisible()
   await page.getByRole('button', { name: 'Sort into Use' }).click()
 
-  await expect(
-    page.getByRole('heading', { name: 'The result, still open to correction.' }),
-  ).toBeVisible()
+  await reviewCompletedSort(page)
   const resultVideo = page.locator('.ss-result-card video')
   await page.getByRole('tab').filter({ hasText: 'Use' }).click()
   await expect(resultVideo).toBeVisible()
   expect(await resultVideo.evaluate((video) => (video as HTMLVideoElement).controls)).toBe(true)
 
-  await page.getByRole('button', { name: 'Replay session' }).click()
+  await page.getByRole('button', { name: 'Replay original choices' }).click()
   const replayVideo = page.locator('.ss-replay-card video')
   await expect(replayVideo).toBeVisible()
   expect(await replayVideo.evaluate((video) => (video as HTMLVideoElement).controls)).toBe(true)

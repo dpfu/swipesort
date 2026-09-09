@@ -2,6 +2,7 @@ import { useId, useRef, type ChangeEvent } from 'react'
 import type { Category } from '../../domain/types'
 import { MediaView } from '../shared/MediaView'
 import type { PresentedMedia } from '../types'
+import { TikTokImport } from './TikTokImport'
 import './setup-screen.css'
 
 export type SetupScreenProps = {
@@ -14,6 +15,7 @@ export type SetupScreenProps = {
   onRemoveItem: (itemId: string) => void
   onMoveItem: (itemId: string, direction: 'up' | 'down') => void
   onStart: () => void
+  onTikTokImport?: (text: string) => Promise<void>
   onLoadDemo?: () => void
   startLabel?: string
   isImporting?: boolean
@@ -33,11 +35,13 @@ export function SetupScreen({
   onMoveItem,
   onStart,
   onLoadDemo,
+  onTikTokImport,
   startLabel = 'Start sorting',
   isImporting = false,
   error,
 }: SetupScreenProps) {
   const categoryHintId = useId()
+  const cardOrderHintId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const ready =
     projectName.trim().length > 0 &&
@@ -54,9 +58,9 @@ export function SetupScreen({
   return (
     <main className="ss-setup" aria-labelledby="setup-title">
       <header className="ss-screen-heading">
-        <p className="ss-eyebrow">New sort</p>
-        <h1 id="setup-title">Make two choices feel clear.</h1>
-        <p>Choose the two destinations, then add the images and short videos you want to sort.</p>
+        <p className="ss-eyebrow">Setup</p>
+        <h1 id="setup-title">Set up your sort.</h1>
+        <p>Name two categories, then add images, short videos, or TikTok links.</p>
       </header>
 
       <form
@@ -76,7 +80,7 @@ export function SetupScreen({
             <input
               value={projectName}
               onChange={(event) => onProjectNameChange(event.target.value)}
-              placeholder="Untitled sort"
+              placeholder="Untitled project"
               autoComplete="off"
               disabled={isImporting}
             />
@@ -88,7 +92,9 @@ export function SetupScreen({
             <span>02</span>
             <h2 id="categories-heading">Two categories</h2>
           </div>
-          <p className="ss-field-hint" id={categoryHintId}>These labels appear as soon as you move a card.</p>
+          <p className="ss-field-hint" id={categoryHintId}>
+            Name where a left or right swipe sends each card.
+          </p>
           <div className="ss-category-fields">
             {categories.map((category) => (
               <label className="ss-field" key={category.id}>
@@ -112,7 +118,7 @@ export function SetupScreen({
         <section className="ss-field-group" aria-labelledby="media-heading">
           <div className="ss-section-label">
             <span>03</span>
-            <h2 id="media-heading">Media</h2>
+            <h2 id="media-heading">Cards</h2>
           </div>
           <input
             ref={inputRef}
@@ -126,16 +132,18 @@ export function SetupScreen({
             aria-hidden="true"
           />
 
+          {onTikTokImport ? <TikTokImport onImport={onTikTokImport} disabled={isImporting} /> : null}
+
           {items.length === 0 ? (
             <div className="ss-empty-media">
-              <p>Start with your own images or short videos.</p>
+              <p>Add images or short videos from this device.</p>
               <button
                 className="ss-button ss-button--primary"
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={isImporting}
               >
-                {isImporting ? 'Adding media…' : 'Choose media'}
+                {isImporting ? 'Adding…' : 'Add images or videos'}
               </button>
               {onLoadDemo ? (
                 <button className="ss-text-action" type="button" onClick={onLoadDemo} disabled={isImporting}>
@@ -146,17 +154,24 @@ export function SetupScreen({
           ) : (
             <>
               <div className="ss-media-summary">
-                <p><strong>{items.length}</strong> {items.length === 1 ? 'card' : 'cards'} in this sort</p>
+                <p><strong>{items.length}</strong> {items.length === 1 ? 'card' : 'cards'} ready to sort</p>
                 <button
                   className="ss-text-action"
                   type="button"
                   onClick={() => inputRef.current?.click()}
                   disabled={isImporting}
                 >
-                  {isImporting ? 'Adding…' : 'Add more'}
+                  {isImporting ? 'Adding…' : 'Add images or videos'}
                 </button>
               </div>
-              <ol className="ss-setup-list" aria-label="Sorting order">
+              <p className="ss-field-hint" id={cardOrderHintId}>
+                Cards appear in this order.
+              </p>
+              <ol
+                className="ss-setup-list"
+                aria-label="Card order"
+                aria-describedby={cardOrderHintId}
+              >
                 {items.map((media, index) => (
                   <li key={media.item.id}>
                     <div className="ss-setup-list__thumb">
@@ -165,7 +180,8 @@ export function SetupScreen({
                     <div className="ss-setup-list__copy">
                       <span>{String(index + 1).padStart(2, '0')}</span>
                       <strong title={media.item.title}>{media.item.title}</strong>
-                      <small>{media.asset.kind === 'image' ? 'Image' : 'Video'}</small>
+                      {media.asset.kind === 'tiktok' ? <a className="ss-setup-tiktok-link" href={media.asset.tiktok.url} target="_blank" rel="noopener noreferrer">Open video ↗</a> : null}
+                      <small>{media.asset.kind === 'tiktok' ? 'TikTok · online' : media.asset.kind === 'image' ? 'Image' : 'Video'}</small>
                     </div>
                     <div className="ss-setup-list__actions" aria-label={`Actions for ${media.item.title}`}>
                       <button
@@ -203,7 +219,11 @@ export function SetupScreen({
         {error ? <p className="ss-form-error" role="alert">{error}</p> : null}
 
         <footer className="ss-setup__footer">
-          <p>{ready ? 'Everything stays in this browser.' : 'Name the project, name both categories, and add media.'}</p>
+          <p>
+            {ready
+              ? 'Changes save in this browser. Local files stay here; TikTok videos stream online.'
+              : 'Add a project name, two category names, and at least one card.'}
+          </p>
           <button className="ss-button ss-button--primary" type="submit" disabled={!ready}>
             {startLabel}
           </button>

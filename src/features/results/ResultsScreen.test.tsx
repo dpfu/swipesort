@@ -20,6 +20,7 @@ describe('ResultsScreen', () => {
       />,
     )
 
+    expect(screen.getByRole('heading', { name: 'Review your result.' })).toBeVisible()
     expect(screen.getByRole('tabpanel')).toHaveTextContent('First frame')
     await user.click(screen.getByRole('button', { name: 'Move First frame to Vivid' }))
     expect(onMoveItem).toHaveBeenCalledWith('one', 'vivid')
@@ -47,5 +48,45 @@ describe('ResultsScreen', () => {
     expect(vivid).toHaveFocus()
     expect(vivid).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Second frame')
+  })
+
+  it('opens on the category that contains cards instead of an empty result', () => {
+    render(
+      <ResultsScreen
+        categories={testCategories}
+        items={[testMedia('one', 'First frame')]}
+        categoryIdByItemId={{ one: 'vivid' }}
+        onMoveItem={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('tab', { name: /Vivid/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('First frame')
+  })
+
+  it('names the follow-up actions without exposing recording internals', async () => {
+    const user = userEvent.setup()
+    const onReplay = vi.fn()
+    const onNewSort = vi.fn()
+    render(
+      <ResultsScreen
+        categories={testCategories}
+        items={[testMedia('one', 'First frame')]}
+        categoryIdByItemId={{ one: 'quiet' }}
+        onMoveItem={vi.fn()}
+        onReplay={onReplay}
+        onNewSort={onNewSort}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Sort again' }))
+    await user.click(screen.getByRole('button', { name: 'Replay original choices' }))
+
+    expect(onNewSort).toHaveBeenCalledOnce()
+    expect(onReplay).toHaveBeenCalledOnce()
+    expect(screen.queryByText(/session/i)).not.toBeInTheDocument()
   })
 })

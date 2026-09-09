@@ -27,10 +27,11 @@ describe('SetupScreen', () => {
     const onLoadDemo = vi.fn()
     render(<SetupScreen {...props({ onLoadDemo })} />)
 
+    expect(screen.getByRole('heading', { name: 'Set up your sort.' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Try demo set' }))
 
     expect(onLoadDemo).toHaveBeenCalledOnce()
-    expect(screen.getByRole('button', { name: 'Choose media' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Add images or videos' })).toBeEnabled()
     expect(document.querySelector('input[type="file"]')).toHaveAttribute(
       'accept',
       'image/*,video/*',
@@ -46,6 +47,13 @@ describe('SetupScreen', () => {
     const onStart = vi.fn()
     render(<SetupScreen {...props({ items: media, onMoveItem, onRemoveItem, onStart })} />)
 
+    expect(screen.getByText('Cards appear in this order.')).toBeVisible()
+    expect(screen.getByRole('list', { name: 'Card order' })).toBeVisible()
+    expect(
+      screen.getByText(
+        'Changes save in this browser. Local files stay here; TikTok videos stream online.',
+      ),
+    ).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Move Second frame earlier' }))
     await user.click(screen.getByRole('button', { name: 'Remove First frame' }))
     await user.click(screen.getByRole('button', { name: 'Start sorting' }))

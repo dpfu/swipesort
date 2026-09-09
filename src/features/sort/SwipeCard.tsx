@@ -8,6 +8,7 @@ import {
 import {
   motion,
   useAnimationControls,
+  useDragControls,
   useMotionValue,
   useReducedMotion,
   useTransform,
@@ -45,6 +46,8 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
   { media, categories, onCommit, onSettled, onCommitFailed, disabled = false },
   forwardedRef,
 ) {
+  const isTikTok = media.asset.kind === 'tiktok'
+  const dragControls = useDragControls()
   const cardRef = useRef<HTMLElement>(null)
   const dragStartRef = useRef(0)
   const samplesRef = useRef<SwipeSample[]>([])
@@ -201,20 +204,28 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
         data-testid="swipe-card"
         aria-label={`Sort ${media.item.title}`}
         drag={disabled || isLeaving ? false : 'x'}
+        dragControls={dragControls}
+        dragListener={!isTikTok}
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.82}
         dragMomentum={false}
         animate={controls}
-        style={{ x, rotate: reducedMotion ? 0 : rotation, touchAction: 'pan-y' }}
+        style={{ x, rotate: reducedMotion ? 0 : rotation, touchAction: isTikTok ? 'auto' : 'pan-y' }}
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         whileDrag={reducedMotion ? undefined : { scale: 1.012, cursor: 'grabbing' }}
       >
         <MediaView media={media} variant="active" />
-        <footer className="ss-swipe-card__caption">
+        <footer
+          className={`ss-swipe-card__caption${isTikTok ? ' ss-swipe-card__caption--handle' : ''}`}
+          data-testid={isTikTok ? 'tiktok-swipe-handle' : undefined}
+          onPointerDown={isTikTok ? (event) => {
+            if (!disabled && !isLeaving) dragControls.start(event)
+          } : undefined}
+        >
           <p>{media.item.title}</p>
-          <span>{media.asset.kind === 'video' ? 'Video' : 'Image'}</span>
+          <span>{isTikTok ? '← Swipe here →' : media.asset.kind === 'video' ? 'Video' : 'Image'}</span>
         </footer>
       </motion.article>
     </div>

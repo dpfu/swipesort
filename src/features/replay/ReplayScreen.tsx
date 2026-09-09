@@ -41,8 +41,8 @@ export function ReplayScreen({
       <main className="ss-replay ss-replay--empty" aria-labelledby="replay-empty-title">
         <div>
           <p className="ss-eyebrow">Replay</p>
-          <h1 id="replay-empty-title">Nothing was recorded yet.</h1>
-          {onExit ? <button className="ss-button ss-button--primary" type="button" onClick={onExit}>Back to results</button> : null}
+          <h1 id="replay-empty-title">No choices to replay.</h1>
+          {onExit ? <button className="ss-button ss-button--primary" type="button" onClick={onExit}>Back to result</button> : null}
         </div>
       </main>
     )
@@ -52,10 +52,10 @@ export function ReplayScreen({
     <main className="ss-replay" aria-labelledby="replay-title">
       <header className="ss-replay__header">
         <div>
-          <p className="ss-eyebrow">Original session</p>
+          <p className="ss-eyebrow">Original sort</p>
           <h1 id="replay-title">Replay</h1>
         </div>
-        <p>Read-only · corrections are not shown here</p>
+        <p>Original choices only. Result corrections aren’t included.</p>
       </header>
 
       <section className="ss-replay-stage" aria-live="polite" aria-atomic="true">
@@ -86,10 +86,10 @@ export function ReplayScreen({
             <strong>{currentFrame.item.item.title}</strong>
             <span>
               {safeStep === 0 || !currentCategory
-                ? 'Ready to begin'
-                : `${currentCategory.name} · ${formatTime(currentFrame.atMs)}`}
+                ? 'Ready to replay'
+                : `Chose ${currentCategory.name} · ${formatTime(currentFrame.atMs)} after start`}
             </span>
-            {safeStep > 0 && currentFrame.undone ? <em>Later undone</em> : null}
+            {safeStep > 0 && currentFrame.undone ? <em>Undone later</em> : null}
           </footer>
         </article>
       </section>
@@ -100,7 +100,7 @@ export function ReplayScreen({
             type="button"
             onClick={() => onStepChange(Math.max(0, safeStep - 1))}
             disabled={safeStep === 0}
-            aria-label="Previous replay step"
+            aria-label="Previous choice"
           >
             ←
           </button>
@@ -116,7 +116,7 @@ export function ReplayScreen({
             type="button"
             onClick={() => onStepChange(Math.min(frames.length, safeStep + 1))}
             disabled={safeStep === frames.length}
-            aria-label="Next replay step"
+            aria-label="Next choice"
           >
             →
           </button>
@@ -132,12 +132,16 @@ export function ReplayScreen({
             onChange={(event) => onStepChange(Number(event.target.value))}
           />
         </label>
-        <p><strong>{safeStep}</strong> / {frames.length}</p>
+        <p>
+          {safeStep === 0
+            ? `Ready · ${frames.length} ${frames.length === 1 ? 'choice' : 'choices'}`
+            : <>Choice <strong>{safeStep}</strong> of {frames.length}</>}
+        </p>
       </section>
 
       {onExit ? (
         <footer className="ss-replay__footer">
-          <button className="ss-text-action" type="button" onClick={onExit}>Back to results</button>
+          <button className="ss-text-action" type="button" onClick={onExit}>Back to result</button>
         </footer>
       ) : null}
     </main>

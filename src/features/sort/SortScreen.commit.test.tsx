@@ -91,12 +91,12 @@ describe('SortScreen commit handoff', () => {
     expect(screen.queryByRole('article', { name: 'Sort Second frame' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sort into Quiet' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Undo last' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Leave sort' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Back to setup' })).toBeDisabled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Sort into Vivid' }))
     fireEvent.keyDown(window, { key: 'ArrowRight' })
     fireEvent.keyDown(window, { key: 'z' })
-    fireEvent.click(screen.getByRole('button', { name: 'Leave sort' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Back to setup' }))
 
     expect(onAssign).toHaveBeenCalledOnce()
     expect(onUndo).not.toHaveBeenCalled()
@@ -125,7 +125,7 @@ describe('SortScreen commit handoff', () => {
     expect(screen.getByRole('article', { name: 'Sort Second frame' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sort into Quiet' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Undo last' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Leave sort' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Back to setup' })).toBeEnabled()
   })
 
   it('restores the same card and unlocks controls when persistence rejects', async () => {
@@ -170,10 +170,10 @@ describe('SortScreen commit handoff', () => {
     expect(screen.getByRole('article', { name: 'Sort First frame' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sort into Quiet' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Undo last' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Leave sort' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Back to setup' })).toBeEnabled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Undo last' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Leave sort' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Back to setup' }))
     expect(onUndo).toHaveBeenCalledOnce()
     expect(onExit).toHaveBeenCalledOnce()
   })

@@ -94,6 +94,15 @@ export class SwipeSortStorage {
     return this.write((database) => database.put('assets', asset))
   }
 
+  /** Add a batch and its card order atomically; a failed import leaves no partial cards. */
+  async putProjectWithAssets(project: Project, assets: StoredAsset[]): Promise<void> {
+    const db = await this.open()
+    const transaction = db.transaction(['projects', 'assets'], 'readwrite')
+    await Promise.all(assets.map((asset) => transaction.objectStore('assets').put(asset)))
+    await transaction.objectStore('projects').put(project)
+    await transaction.done
+  }
+
   async deleteAsset(id: string): Promise<void> {
     await (await this.open()).delete('assets', id)
   }

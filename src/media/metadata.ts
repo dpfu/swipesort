@@ -39,7 +39,7 @@ export class UnsupportedMediaError extends Error {
 }
 
 export function describeMediaFile(file: File): {
-  kind: MediaKind
+  kind: Exclude<MediaKind, 'tiktok'>
   mimeType: string
 } {
   const declaredType = file.type.toLowerCase().split(';', 1)[0]?.trim() ?? ''
@@ -93,7 +93,7 @@ export function extractMediaMetadata(
 ): Promise<VideoMetadata>
 export function extractMediaMetadata(
   blob: Blob,
-  kind: MediaKind,
+  kind: Exclude<MediaKind, 'tiktok'>,
 ): Promise<ExtractedMediaMetadata> {
   return kind === 'image'
     ? extractImageMetadata(blob)

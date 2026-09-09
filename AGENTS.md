@@ -5,13 +5,13 @@ SwipeSort is a separate product from SortBoard. Preserve its deliberately mobile
 ## Product invariants
 
 - Exactly two freely named categories.
-- Images and short videos only in v0.1.
+- Local images/short videos and full TikTok video links. No generic remote-media ingestion.
 - One active card during sorting; horizontal swipe is the primary action.
 - Buttons and keyboard are complete input alternatives.
 - Original session recordings are immutable.
 - Results corrections never rewrite replay history.
 - Replay is strictly read-only.
-- All project data remains browser-local unless explicitly exported.
+- Project data and local files remain browser-local unless explicitly exported. TikTok playback explicitly contacts TikTok; store canonical links, never download its videos.
 
 ## Engineering guardrails
 
